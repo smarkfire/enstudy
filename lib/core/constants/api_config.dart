@@ -1,7 +1,15 @@
-class ApiConfig {
-  static const String baiduOcrApiKey = 'tvSSbTMNp0TbsGaCGCPtt8wn';
-  static const String baiduOcrSecretKey = 'Z59wTpKQEr4ff2t5mPfRKTYXhNdx9oDR';
-  static const String deepseekApiKey = 'sk-876cf5feb7f64776b671002a7f22e44f';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-  static const String corsProxyUrl = '';
+class ApiConfig {
+  static String get baiduOcrApiKey =>
+      dotenv.env['BAIDU_OCR_API_KEY'] ?? '';
+
+  static String get baiduOcrSecretKey =>
+      dotenv.env['BAIDU_OCR_SECRET_KEY'] ?? '';
+
+  static String get deepseekApiKey =>
+      dotenv.env['DEEPSEEK_API_KEY'] ?? '';
+
+  static String get corsProxyUrl =>
+      dotenv.env['CORS_PROXY_URL'] ?? '';
 }
