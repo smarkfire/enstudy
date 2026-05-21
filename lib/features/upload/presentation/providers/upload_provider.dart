@@ -441,8 +441,8 @@ class UploadNotifier extends StateNotifier<UploadState> {
     );
   }
 
-  Future<void> saveSelectedCards() async {
-    if (state.uploadResult == null) return;
+  Future<int> saveSelectedCards() async {
+    if (state.uploadResult == null) return 0;
 
     state = state.copyWith(status: UploadStatus.saving);
 
@@ -500,11 +500,13 @@ class UploadNotifier extends StateNotifier<UploadState> {
       }
 
       state = state.copyWith(status: UploadStatus.idle);
+      return cardsToSave.length;
     } catch (e) {
       state = state.copyWith(
         status: UploadStatus.error,
         errorMessage: e.toString(),
       );
+      return -1;
     }
   }
 

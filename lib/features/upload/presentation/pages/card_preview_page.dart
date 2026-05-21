@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:enstudy/core/theme/colors.dart';
 import 'package:enstudy/features/upload/presentation/providers/upload_provider.dart';
@@ -31,7 +32,7 @@ class CardPreviewPage extends ConsumerWidget {
         title: const Text('卡片预览'),
         actions: [
           TextButton.icon(
-            onPressed: () => _saveCards(ref),
+            onPressed: () => _saveCards(context, ref),
             icon: const Icon(Icons.save, color: Colors.white),
             label: const Text(
               '保存',
@@ -213,7 +214,7 @@ class CardPreviewPage extends ConsumerWidget {
       child: SafeArea(
         child: ElevatedButton(
           onPressed: selectedCount > 0
-              ? () => _saveCards(ref)
+              ? () => _saveCards(context, ref)
               : null,
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -230,7 +231,157 @@ class CardPreviewPage extends ConsumerWidget {
     );
   }
 
-  void _saveCards(WidgetRef ref) {
-    ref.read(uploadProvider.notifier).saveSelectedCards();
+  Future<void> _saveCards(BuildContext context, WidgetRef ref) async {
+    final savedCount = await ref.read(uploadProvider.notifier).saveSelectedCards();
+
+    if (!context.mounted) return;
+
+    if (savedCount > 0) {
+      _showSaveSuccessDialog(context, ref, savedCount);
+    } else if (savedCount == -1) {
+      _showSaveErrorDialog(context);
+    }
+  }
+
+  void _showSaveSuccessDialog(BuildContext context, WidgetRef ref, int count) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.check_circle, color: AppColors.success, size: 40),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '保存成功！',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '已成功保存 $count 张卡片到卡片库',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          Column(
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                    context.go('/cards');
+                  },
+                  icon: const Icon(Icons.library_books, size: 20),
+                  label: const Text('查看卡片库'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                    ref.read(uploadProvider.notifier).reset();
+                    context.go('/upload');
+                  },
+                  icon: const Icon(Icons.add_photo_alternate, size: 20),
+                  label: const Text('继续上传'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text(
+                  '留在当前页',
+                  style: TextStyle(color: AppColors.textHint),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSaveErrorDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.error_outline, color: AppColors.error, size: 40),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '保存失败',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '卡片保存过程中出现错误，请重试。\n如果问题持续，请检查应用设置。',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text('知道了'),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
