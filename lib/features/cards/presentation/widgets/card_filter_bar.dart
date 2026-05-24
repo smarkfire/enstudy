@@ -50,10 +50,10 @@ class CardFilterBar extends StatelessWidget {
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               color: isSelected ? Colors.white : option.color,
             ),
-            backgroundColor: option.color.withOpacity(0.1),
+            backgroundColor: option.color.withValues(alpha: 0.1),
             selectedColor: option.color,
             side: BorderSide(
-              color: option.color.withOpacity(isSelected ? 0.0 : 0.3),
+              color: option.color.withValues(alpha: isSelected ? 0.0 : 0.3),
             ),
             showCheckmark: false,
             onSelected: (_) {

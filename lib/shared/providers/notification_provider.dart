@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:enstudy/core/database/app_database.dart';
 import 'package:enstudy/core/database/daos/card_dao.dart';
 import 'package:enstudy/features/profile/presentation/providers/profile_provider.dart';
 import 'package:enstudy/features/upload/presentation/providers/upload_provider.dart';
@@ -38,8 +37,7 @@ class NotificationNotifier extends Notifier<void> {
     final cardDao = ref.read(_notificationCardDaoProvider);
     final now = DateTime.now().millisecondsSinceEpoch;
     final dueCards = await cardDao.getCardsDueForReview(now).first;
-    final overdueCount =
-        dueCards.where((c) => c.status != 'mastered').length;
+    final overdueCount = dueCards.where((c) => c.status != 'mastered').length;
 
     if (overdueCount > 0) {
       await NotificationService().showOverdueReminder(

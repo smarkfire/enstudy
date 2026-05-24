@@ -21,7 +21,7 @@ class StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
-        color: effectiveColor.withOpacity(0.08),
+        color: effectiveColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -40,7 +40,7 @@ class StatCard extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 11,
               color: AppColors.textSecondary,
             ),

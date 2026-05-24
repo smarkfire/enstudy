@@ -12,6 +12,8 @@ import 'package:enstudy/features/games/presentation/pages/game_result_page.dart'
 import 'package:enstudy/features/profile/presentation/pages/profile_page.dart';
 import 'package:enstudy/features/profile/presentation/pages/settings_page.dart';
 import 'package:enstudy/features/profile/presentation/pages/data_management_page.dart';
+import 'package:enstudy/features/profile/presentation/pages/purchase_page.dart';
+import 'package:enstudy/features/profile/presentation/pages/admin_user_list_page.dart';
 import 'package:enstudy/shared/widgets/app_scaffold.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -114,6 +116,20 @@ final appRouter = GoRouter(
               name: 'dataManagement',
               pageBuilder: (context, state) => const NoTransitionPage(
                 child: DataManagementPage(),
+              ),
+            ),
+            GoRoute(
+              path: 'purchase',
+              name: 'purchase',
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: PurchasePage(),
+              ),
+            ),
+            GoRoute(
+              path: 'admin/users',
+              name: 'adminUsers',
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: AdminUserListPage(),
               ),
             ),
           ],

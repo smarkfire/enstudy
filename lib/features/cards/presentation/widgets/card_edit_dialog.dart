@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:enstudy/core/theme/colors.dart';
 import 'package:enstudy/features/cards/domain/entities/card.dart' as domain;
 
 class CardEditDialog extends StatefulWidget {
@@ -31,12 +30,10 @@ class _CardEditDialogState extends State<CardEditDialog> {
         TextEditingController(text: widget.card.translation);
     _phoneticController =
         TextEditingController(text: widget.card.phonetic ?? '');
-    _exampleController =
-        TextEditingController(text: widget.card.example ?? '');
+    _exampleController = TextEditingController(text: widget.card.example ?? '');
     _exampleTranslationController =
         TextEditingController(text: widget.card.exampleTranslation ?? '');
-    _tagsController =
-        TextEditingController(text: widget.card.tags.join(', '));
+    _tagsController = TextEditingController(text: widget.card.tags.join(', '));
     _difficulty = widget.card.difficulty;
   }
 

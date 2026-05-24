@@ -60,7 +60,8 @@ class CardDetailPage extends ConsumerWidget {
                   value: 'delete',
                   child: Row(
                     children: [
-                      Icon(Icons.delete_outline, size: 20, color: AppColors.error),
+                      Icon(Icons.delete_outline,
+                          size: 20, color: AppColors.error),
                       SizedBox(width: 8),
                       Text('删除', style: TextStyle(color: AppColors.error)),
                     ],
@@ -118,7 +119,7 @@ class CardDetailPage extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(
                 card.phonetic!,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   color: AppColors.textSecondary,
                   fontStyle: FontStyle.italic,
@@ -166,7 +167,7 @@ class CardDetailPage extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
@@ -235,7 +236,11 @@ class CardDetailPage extends ConsumerWidget {
   }
 
   Widget _buildInfoRow(
-      BuildContext context, IconData icon, String label, String value) {
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -267,7 +272,8 @@ class CardDetailPage extends ConsumerWidget {
   Widget _buildProgressSection(BuildContext context, domain.Card card) {
     final accuracy =
         card.reviewCount > 0 ? card.correctCount / card.reviewCount : 0.0;
-    final nextReviewStr = DateFormat('yyyy-MM-dd HH:mm').format(card.nextReview);
+    final nextReviewStr =
+        DateFormat('yyyy-MM-dd HH:mm').format(card.nextReview);
 
     return Card(
       child: Padding(
@@ -329,7 +335,11 @@ class CardDetailPage extends ConsumerWidget {
   }
 
   Widget _buildProgressItem(
-      BuildContext context, IconData icon, String label, String value) {
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
     return Expanded(
       child: Column(
         children: [

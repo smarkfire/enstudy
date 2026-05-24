@@ -18,8 +18,10 @@ class ReviewLogDao extends DatabaseAccessor<AppDatabase>
 
   Stream<List<ReviewLogRow>> getLogsByDateRange(int start, int end) =>
       (select(reviewLogs)
-            ..where((t) =>
-                t.answeredAt.isBiggerOrEqualValue(start) &
-                t.answeredAt.isSmallerOrEqualValue(end)))
+            ..where(
+              (t) =>
+                  t.answeredAt.isBiggerOrEqualValue(start) &
+                  t.answeredAt.isSmallerOrEqualValue(end),
+            ))
           .watch();
 }

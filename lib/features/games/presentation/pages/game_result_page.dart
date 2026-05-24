@@ -73,12 +73,14 @@ class _GameResultPageState extends ConsumerState<GameResultPage>
     final expGained = gameState.score;
     final calculator = ScoreCalculator();
     final currentLevel = calculator.calculateLevelFromScore(0);
-    final nextLevelThresholds = GameConstants.levelThresholds.values.toList()..sort();
+    final nextLevelThresholds = GameConstants.levelThresholds.values.toList()
+      ..sort();
     final currentThreshold = nextLevelThresholds[currentLevel - 1];
     final nextThreshold = currentLevel < nextLevelThresholds.length
         ? nextLevelThresholds[currentLevel]
         : nextLevelThresholds.last;
-    final progress = (expGained / (nextThreshold - currentThreshold)).clamp(0.0, 1.0);
+    final progress =
+        (expGained / (nextThreshold - currentThreshold)).clamp(0.0, 1.0);
 
     return Scaffold(
       body: Stack(
@@ -91,7 +93,8 @@ class _GameResultPageState extends ConsumerState<GameResultPage>
                   const SizedBox(height: 20),
                   _buildScoreSection(accuracy),
                   const SizedBox(height: 24),
-                  _buildStatsGrid(correctCount, wrongCount, gameState.streak, timeElapsed),
+                  _buildStatsGrid(
+                      correctCount, wrongCount, gameState.streak, timeElapsed),
                   const SizedBox(height: 24),
                   _buildExpSection(expGained, currentLevel, progress),
                   if (wrongCount > 0) ...[
@@ -164,7 +167,7 @@ class _GameResultPageState extends ConsumerState<GameResultPage>
                     : accuracy >= 60
                         ? '不错哦，再接再厉！'
                         : '加油，下次会更好！',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 16,
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w500,
@@ -185,10 +188,12 @@ class _GameResultPageState extends ConsumerState<GameResultPage>
       position: Tween<Offset>(
         begin: const Offset(0, 0.3),
         end: Offset.zero,
-      ).animate(CurvedAnimation(
-        parent: _slideController,
-        curve: const Interval(0.2, 0.7, curve: Curves.easeOut),
-      )),
+      ).animate(
+        CurvedAnimation(
+          parent: _slideController,
+          curve: const Interval(0.2, 0.7, curve: Curves.easeOut),
+        ),
+      ),
       child: Row(
         children: [
           Expanded(
@@ -240,9 +245,9 @@ class _GameResultPageState extends ConsumerState<GameResultPage>
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -258,7 +263,7 @@ class _GameResultPageState extends ConsumerState<GameResultPage>
           ),
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 11,
               color: AppColors.textSecondary,
             ),
@@ -275,12 +280,12 @@ class _GameResultPageState extends ConsumerState<GameResultPage>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.accent.withOpacity(0.1),
-            AppColors.accent.withOpacity(0.05),
+            AppColors.accent.withValues(alpha: 0.1),
+            AppColors.accent.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.accent.withOpacity(0.3)),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -327,7 +332,7 @@ class _GameResultPageState extends ConsumerState<GameResultPage>
               const SizedBox(width: 12),
               Text(
                 'Lv.${level + 1}',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   color: AppColors.textSecondary,
                 ),
@@ -363,9 +368,7 @@ class _GameResultPageState extends ConsumerState<GameResultPage>
               ),
               const Spacer(),
               Icon(
-                _showWrongCards
-                    ? Icons.expand_less
-                    : Icons.expand_more,
+                _showWrongCards ? Icons.expand_less : Icons.expand_more,
                 color: AppColors.textSecondary,
               ),
             ],
@@ -381,9 +384,10 @@ class _GameResultPageState extends ConsumerState<GameResultPage>
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.05),
+                    color: AppColors.error.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.error.withOpacity(0.2)),
+                    border: Border.all(
+                        color: AppColors.error.withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     children: [
@@ -402,7 +406,7 @@ class _GameResultPageState extends ConsumerState<GameResultPage>
                             if (card.phonetic != null)
                               Text(
                                 card.phonetic!,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 12,
                                   color: AppColors.textSecondary,
                                 ),
@@ -413,7 +417,7 @@ class _GameResultPageState extends ConsumerState<GameResultPage>
                       Expanded(
                         child: Text(
                           card.translation,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 14,
                             color: AppColors.textSecondary,
                           ),
@@ -478,6 +482,6 @@ class _GameResultPageState extends ConsumerState<GameResultPage>
   String _formatTime(int seconds) {
     final m = seconds ~/ 60;
     final s = seconds % 60;
-    return '${m}分${s}秒';
+    return '$m分$s秒';
   }
 }

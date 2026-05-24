@@ -55,17 +55,18 @@ class _SpeedGameState extends ConsumerState<SpeedGame>
       if (showCorrect) {
         displayedMeaning = card.translation;
       } else {
-        final others =
-            widget.cards.where((c) => c.id != card.id).toList();
+        final others = widget.cards.where((c) => c.id != card.id).toList();
         others.shuffle(random);
         displayedMeaning =
             others.isNotEmpty ? others.first.translation : card.translation;
       }
-      _questions.add(_SpeedQuestion(
-        card: card,
-        displayedMeaning: displayedMeaning,
-        isCorrectMeaning: showCorrect,
-      ));
+      _questions.add(
+        _SpeedQuestion(
+          card: card,
+          displayedMeaning: displayedMeaning,
+          isCorrectMeaning: showCorrect,
+        ),
+      );
     }
     _questions.shuffle(random);
   }
@@ -94,8 +95,7 @@ class _SpeedGameState extends ConsumerState<SpeedGame>
 
     final question = _questions[_currentIndex];
     final isActuallyCorrect = question.isCorrectMeaning;
-    final userGotItRight =
-        (isActuallyCorrect && userSaysCorrect) ||
+    final userGotItRight = (isActuallyCorrect && userSaysCorrect) ||
         (!isActuallyCorrect && !userSaysCorrect);
 
     if (userGotItRight) {
@@ -147,7 +147,8 @@ class _SpeedGameState extends ConsumerState<SpeedGame>
       builder: (context, child) {
         return Container(
           color: _flashColor != null && _flashController.isAnimating
-              ? _flashColor!.withOpacity(0.15 * (1 - _flashController.value))
+              ? _flashColor!
+                  .withValues(alpha: 0.15 * (1 - _flashController.value))
               : Colors.transparent,
           child: child,
         );
@@ -172,7 +173,7 @@ class _SpeedGameState extends ConsumerState<SpeedGame>
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -234,7 +235,7 @@ class _SpeedGameState extends ConsumerState<SpeedGame>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -280,8 +281,7 @@ class _SpeedGameState extends ConsumerState<SpeedGame>
           AnimatedBuilder(
             animation: _shakeController,
             builder: (context, child) {
-              final offset =
-                  sin(_shakeController.value * 4 * pi) * 10;
+              final offset = sin(_shakeController.value * 4 * pi) * 10;
               return Transform.translate(
                 offset: Offset(offset, 0),
                 child: child,
@@ -298,7 +298,7 @@ class _SpeedGameState extends ConsumerState<SpeedGame>
             children: [
               Expanded(
                 child: _buildAnswerButton(
-                  label: '✓ 认识',
+                  label: '✓ 正确',
                   color: AppColors.success,
                   onTap: () => _onAnswer(true),
                 ),
@@ -306,7 +306,7 @@ class _SpeedGameState extends ConsumerState<SpeedGame>
               const SizedBox(width: 16),
               Expanded(
                 child: _buildAnswerButton(
-                  label: '✗ 不认识',
+                  label: '✗ 不正确',
                   color: AppColors.error,
                   onTap: () => _onAnswer(false),
                 ),
@@ -317,7 +317,7 @@ class _SpeedGameState extends ConsumerState<SpeedGame>
         const SizedBox(height: 16),
         Text(
           '${_currentIndex + 1} / ${_questions.length}',
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 14,
             color: AppColors.textSecondary,
           ),
@@ -340,7 +340,7 @@ class _SpeedGameState extends ConsumerState<SpeedGame>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.3),
+              color: color.withValues(alpha: 0.3),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),

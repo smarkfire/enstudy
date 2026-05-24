@@ -61,9 +61,8 @@ class _ReorderGameState extends ConsumerState<ReorderGame>
     int i = 0;
     final random = Random();
     while (i < word.length) {
-      final chunkSize = word.length - i <= 2
-          ? word.length - i
-          : (random.nextBool() ? 2 : 3);
+      final chunkSize =
+          word.length - i <= 2 ? word.length - i : (random.nextBool() ? 2 : 3);
       final end = (i + chunkSize).clamp(0, word.length);
       parts.add(word.substring(i, end));
       i = end;
@@ -179,7 +178,7 @@ class _ReorderGameState extends ConsumerState<ReorderGame>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -187,8 +186,11 @@ class _ReorderGameState extends ConsumerState<ReorderGame>
             ),
             child: Column(
               children: [
-                const Icon(Icons.translate,
-                    color: AppColors.primary, size: 28),
+                const Icon(
+                  Icons.translate,
+                  color: AppColors.primary,
+                  size: 28,
+                ),
                 const SizedBox(height: 8),
                 Text(
                   card.translation,
@@ -216,7 +218,10 @@ class _ReorderGameState extends ConsumerState<ReorderGame>
                   final isUsed = _selectedParts.contains(part) &&
                       _countInList(_selectedParts, part) >
                           _countBeforeIndex(
-                              _shuffledParts, part, _shuffledParts.indexOf(part));
+                            _shuffledParts,
+                            part,
+                            _shuffledParts.indexOf(part),
+                          );
                   return _buildDraggableChip(
                     text: part,
                     onTap: isUsed ? null : () => _onPartTap(part),
@@ -231,7 +236,7 @@ class _ReorderGameState extends ConsumerState<ReorderGame>
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.1),
+                color: AppColors.success.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: AppColors.success),
               ),
@@ -247,8 +252,7 @@ class _ReorderGameState extends ConsumerState<ReorderGame>
             ),
           ],
           const Spacer(),
-          if (!_answered &&
-              _selectedParts.length == _correctParts.length)
+          if (!_answered && _selectedParts.length == _correctParts.length)
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: SizedBox(
@@ -265,15 +269,14 @@ class _ReorderGameState extends ConsumerState<ReorderGame>
                   ),
                   child: const Text(
                     '提交',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
             ),
           Text(
             '${_currentIndex + 1} / ${_cards.length}',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               color: AppColors.textSecondary,
             ),
@@ -306,15 +309,18 @@ class _ReorderGameState extends ConsumerState<ReorderGame>
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.success.withOpacity(0.1),
+            color: AppColors.success.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: AppColors.success, width: 2),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.check_circle,
-                  color: AppColors.success, size: 28),
+              const Icon(
+                Icons.check_circle,
+                color: AppColors.success,
+                size: 28,
+              ),
               const SizedBox(width: 8),
               Text(
                 _correctParts.join(),
@@ -344,7 +350,7 @@ class _ReorderGameState extends ConsumerState<ReorderGame>
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.error.withOpacity(0.1),
+            color: AppColors.error.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: AppColors.error, width: 2),
           ),
@@ -383,7 +389,7 @@ class _ReorderGameState extends ConsumerState<ReorderGame>
         ),
       ),
       child: _selectedParts.isEmpty
-          ? Center(
+          ? const Center(
               child: Text(
                 '点击下方卡片排列正确顺序',
                 style: TextStyle(
@@ -420,7 +426,7 @@ class _ReorderGameState extends ConsumerState<ReorderGame>
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.2),
+              color: AppColors.primary.withValues(alpha: 0.2),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),

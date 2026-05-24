@@ -53,10 +53,13 @@ class LevelProgress extends StatelessWidget {
     if (level >= thresholds.length) return 1.0;
 
     final currentThreshold = thresholds[level - 1];
-    final nextThreshold = level < thresholds.length ? thresholds[level] : thresholds.last;
+    final nextThreshold =
+        level < thresholds.length ? thresholds[level] : thresholds.last;
 
     if (nextThreshold == currentThreshold) return 1.0;
-    return ((totalScore - currentThreshold) / (nextThreshold - currentThreshold)).clamp(0.0, 1.0);
+    return ((totalScore - currentThreshold) /
+            (nextThreshold - currentThreshold))
+        .clamp(0.0, 1.0);
   }
 
   int get _nextLevelScore {
@@ -72,8 +75,8 @@ class LevelProgress extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            _levelColor.withOpacity(0.9),
-            _levelColor.withOpacity(0.6),
+            _levelColor.withValues(alpha: 0.9),
+            _levelColor.withValues(alpha: 0.6),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -87,7 +90,7 @@ class LevelProgress extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.25),
+                  color: Colors.white.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(_levelIcon, size: 32, color: Colors.white),
@@ -110,7 +113,7 @@ class LevelProgress extends StatelessWidget {
                       '总积分：$totalScore',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85),
                       ),
                     ),
                   ],
@@ -126,7 +129,7 @@ class LevelProgress extends StatelessWidget {
                 Container(
                   height: 8,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.25),
+                    color: Colors.white.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -151,14 +154,14 @@ class LevelProgress extends StatelessWidget {
                 '$totalScore',
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                 ),
               ),
               Text(
                 '$_nextLevelScore',
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                 ),
               ),
             ],

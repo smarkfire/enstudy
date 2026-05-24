@@ -8,8 +8,7 @@ class BaiduOcrService {
 
   BaiduOcrService(this._dio);
 
-  static const String _tokenUrl =
-      'https://aip.baidubce.com/oauth/2.0/token';
+  static const String _tokenUrl = 'https://aip.baidubce.com/oauth/2.0/token';
   static const String _ocrUrl =
       'https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic';
 
@@ -49,21 +48,25 @@ class BaiduOcrService {
       final location = item['location'] as Map<String, dynamic>?;
 
       if (location != null) {
-        words.add(OcrWord(
-          text: wordsStr,
-          left: (location['left'] as num?)?.toDouble() ?? 0,
-          top: (location['top'] as num?)?.toDouble() ?? 0,
-          width: (location['width'] as num?)?.toDouble() ?? 0,
-          height: (location['height'] as num?)?.toDouble() ?? 0,
-        ));
+        words.add(
+          OcrWord(
+            text: wordsStr,
+            left: (location['left'] as num?)?.toDouble() ?? 0,
+            top: (location['top'] as num?)?.toDouble() ?? 0,
+            width: (location['width'] as num?)?.toDouble() ?? 0,
+            height: (location['height'] as num?)?.toDouble() ?? 0,
+          ),
+        );
       } else {
-        words.add(OcrWord(
-          text: wordsStr,
-          left: 0,
-          top: 0,
-          width: 0,
-          height: 0,
-        ));
+        words.add(
+          OcrWord(
+            text: wordsStr,
+            left: 0,
+            top: 0,
+            width: 0,
+            height: 0,
+          ),
+        );
       }
 
       if (textBuffer.isNotEmpty) textBuffer.write('\n');

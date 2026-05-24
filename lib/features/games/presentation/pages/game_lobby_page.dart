@@ -109,7 +109,7 @@ class GameLobbyPage extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -120,7 +120,8 @@ class GameLobbyPage extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.local_fire_department, color: Colors.orange, size: 24),
+              const Icon(Icons.local_fire_department,
+                  color: Colors.orange, size: 24),
               const SizedBox(width: 6),
               Text(
                 '连续打卡 ${state.streakDays} 天',
@@ -213,7 +214,8 @@ class GameLobbyPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildGameGrid(BuildContext context, WidgetRef ref, List<domain.Card> cards) {
+  Widget _buildGameGrid(
+      BuildContext context, WidgetRef ref, List<domain.Card> cards) {
     return GridView.count(
       crossAxisCount: 2,
       mainAxisSpacing: 12,
@@ -260,7 +262,7 @@ class GameLobbyPage extends ConsumerWidget {
           boxShadow: isAvailable
               ? [
                   BoxShadow(
-                    color: game.color.withOpacity(0.3),
+                    color: game.color.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -277,7 +279,7 @@ class GameLobbyPage extends ConsumerWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.25),
+                  color: Colors.white.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -301,7 +303,7 @@ class GameLobbyPage extends ConsumerWidget {
                   Text(
                     game.description,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.85),
+                      color: Colors.white.withValues(alpha: 0.85),
                       fontSize: 12,
                     ),
                     maxLines: 1,

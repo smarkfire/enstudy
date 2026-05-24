@@ -105,7 +105,7 @@ class _ReviewCardState extends State<ReviewCard>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -129,7 +129,7 @@ class _ReviewCardState extends State<ReviewCard>
               widget.phonetic!,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -137,7 +137,7 @@ class _ReviewCardState extends State<ReviewCard>
           const SizedBox(height: 32),
           Icon(
             Icons.touch_app,
-            color: Colors.white.withOpacity(0.5),
+            color: Colors.white.withValues(alpha: 0.5),
             size: 28,
           ),
           const SizedBox(height: 4),
@@ -145,7 +145,7 @@ class _ReviewCardState extends State<ReviewCard>
             '点击翻转',
             style: TextStyle(
               fontSize: 13,
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -169,7 +169,7 @@ class _ReviewCardState extends State<ReviewCard>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.secondary.withOpacity(0.3),
+            color: AppColors.secondary.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -194,7 +194,7 @@ class _ReviewCardState extends State<ReviewCard>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -215,7 +215,7 @@ class _ReviewCardState extends State<ReviewCard>
                         widget.exampleTranslation!,
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -227,7 +227,7 @@ class _ReviewCardState extends State<ReviewCard>
             const SizedBox(height: 20),
             Icon(
               Icons.touch_app,
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
               size: 28,
             ),
             const SizedBox(height: 4),
@@ -235,7 +235,7 @@ class _ReviewCardState extends State<ReviewCard>
               '点击翻转',
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.white.withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.5),
               ),
             ),
           ],

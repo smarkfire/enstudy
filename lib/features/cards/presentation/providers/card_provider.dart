@@ -57,26 +57,32 @@ class CardNotifier extends AsyncNotifier<CardFilter> {
 
   void filterByStatus(String? status) {
     final current = state.valueOrNull ?? const CardFilter();
-    state = AsyncData(current.copyWith(
-      status: status,
-      clearStatus: status == null,
-    ));
+    state = AsyncData(
+      current.copyWith(
+        status: status,
+        clearStatus: status == null,
+      ),
+    );
   }
 
   void filterByType(String? type) {
     final current = state.valueOrNull ?? const CardFilter();
-    state = AsyncData(current.copyWith(
-      type: type,
-      clearType: type == null,
-    ));
+    state = AsyncData(
+      current.copyWith(
+        type: type,
+        clearType: type == null,
+      ),
+    );
   }
 
   void searchCards(String query) {
     final current = state.valueOrNull ?? const CardFilter();
-    state = AsyncData(current.copyWith(
-      searchQuery: query.isEmpty ? null : query,
-      clearSearchQuery: query.isEmpty,
-    ));
+    state = AsyncData(
+      current.copyWith(
+        searchQuery: query.isEmpty ? null : query,
+        clearSearchQuery: query.isEmpty,
+      ),
+    );
   }
 
   Future<void> deleteCard(String id) async {

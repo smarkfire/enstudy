@@ -20,12 +20,14 @@ class UploadRepositoryImpl implements UploadRepository {
     required String imagePath,
     String? thumbnailPath,
   }) =>
-      _sourceDao.insertSource(SourcesCompanion(
-        id: Value(id),
-        imagePath: Value(imagePath),
-        thumbnailPath: Value(thumbnailPath),
-        createdAt: Value(DateTime.now().millisecondsSinceEpoch),
-      ));
+      _sourceDao.insertSource(
+        SourcesCompanion(
+          id: Value(id),
+          imagePath: Value(imagePath),
+          thumbnailPath: Value(thumbnailPath),
+          createdAt: Value(DateTime.now().millisecondsSinceEpoch),
+        ),
+      );
 
   @override
   Future<void> deleteSource(String id) => _sourceDao.deleteSource(id);

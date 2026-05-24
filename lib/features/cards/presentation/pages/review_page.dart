@@ -171,7 +171,7 @@ class _ReviewPageState extends ConsumerState<ReviewPage> {
                         ? AppColors.secondaryLight
                         : accuracy >= 0.5
                             ? AppColors.accent
-                            : Color(0xFFFF6B6B),
+                            : const Color(0xFFFF6B6B),
                   ],
                 ),
               ),
@@ -201,7 +201,9 @@ class _ReviewPageState extends ConsumerState<ReviewPage> {
                 _buildStatItem('复习总数', '${reviewState.totalReviewed}'),
                 _buildStatItem('正确数', '${reviewState.correctCount}'),
                 _buildStatItem(
-                    '正确率', '${(accuracy * 100).toInt()}%'),
+                  '正确率',
+                  '${(accuracy * 100).toInt()}%',
+                ),
               ],
             ),
             const SizedBox(height: 40),
@@ -302,7 +304,7 @@ class _ReviewCardWrapperState extends State<_ReviewCardWrapper> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -326,7 +328,7 @@ class _ReviewCardWrapperState extends State<_ReviewCardWrapper> {
               widget.phonetic!,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -334,7 +336,7 @@ class _ReviewCardWrapperState extends State<_ReviewCardWrapper> {
           const SizedBox(height: 32),
           Icon(
             Icons.touch_app,
-            color: Colors.white.withOpacity(0.5),
+            color: Colors.white.withValues(alpha: 0.5),
             size: 28,
           ),
           const SizedBox(height: 4),
@@ -342,7 +344,7 @@ class _ReviewCardWrapperState extends State<_ReviewCardWrapper> {
             '点击翻转查看释义',
             style: TextStyle(
               fontSize: 13,
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -366,7 +368,7 @@ class _ReviewCardWrapperState extends State<_ReviewCardWrapper> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.secondary.withOpacity(0.3),
+            color: AppColors.secondary.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -391,7 +393,7 @@ class _ReviewCardWrapperState extends State<_ReviewCardWrapper> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -412,7 +414,7 @@ class _ReviewCardWrapperState extends State<_ReviewCardWrapper> {
                         widget.exampleTranslation!,
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -426,7 +428,7 @@ class _ReviewCardWrapperState extends State<_ReviewCardWrapper> {
               '请在下方评分',
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.white.withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.5),
               ),
             ),
           ],

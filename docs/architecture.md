@@ -10,8 +10,7 @@
 | 编程语言 | Dart | Flutter官方语言，空安全支持完善 |
 | 状态管理 | Riverpod 2.x (flutter_riverpod) | 编译时安全、可测试性强、依赖注入内置 |
 | 本地数据库 | SQLite (drift) | 类型安全ORM、迁移方便、离线优先 |
-| OCR识别 | 百度OCR API | 国内服务稳定、中英文识别准确率高、免费额度充足 |
-| AI内容分析 | DeepSeek API (deepseek-chat) | 国内服务、性价比高、中文理解优秀、API兼容OpenAI格式 |
+| AI内容分析 | 千问多模态 (qwen3.5-omni-flash) | 阿里云DashScope服务，单次调用完成图片识别+内容分析，API兼容OpenAI格式 |
 | 语音合成(TTS) | flutter_tts | 离线语音合成、支持英文发音、听力游戏核心依赖 |
 | 音频播放 | audioplayers | 游戏音效播放（答对/答错提示音） |
 | 本地通知 | awesome_notifications | 跨平台定时通知、Android/iOS双端支持、支持定时调度 |
@@ -21,6 +20,12 @@
 | 数据备份 | share_plus + file_picker | 数据导出/导入 |
 | 依赖注入 | Riverpod内置 | 统一管理，无需额外库 |
 | 测试Mock | mocktail | 轻量级Mock框架，用于Repository/Service单元测试 |
+| 短信验证码登录 | 阿里云短信服务 | 国内稳定、到达率高、支持验证码模板、按量计费成本低 |
+| 后端服务 | Python + FastAPI | 高性能异步框架，自动生成OpenAPI文档，类型提示完善，开发效率高 |
+| 后端数据库 | PostgreSQL | 功能最强大的开源关系型数据库，JSON支持、事务完善、扩展性强 |
+| 缓存 | Redis | 验证码临时存储、Token黑名单、高频查询缓存 |
+| 认证 | JWT (PyJWT) | 无状态认证，适合移动端，Token携带用户信息 |
+| 环境变量配置 | flutter_dotenv | 敏感配置通过.env文件管理，不硬编码到代码中 |
 
 ### 1.2 项目结构
 
@@ -56,6 +61,22 @@ enstudy/
 │   │   └── router/                  # 路由配置
 │   │       └── app_router.dart
 │   ├── features/                    # 功能模块层
+│   │   ├── auth/                    # 用户认证
+│   │   │   ├── data/
+│   │   │   │   ├── datasources/
+│   │   │   │   │   └── auth_api_service.dart    # 后端认证API调用
+│   │   │   │   └── repositories/
+│   │   │   │       └── auth_repository_impl.dart
+│   │   │   ├── domain/
+│   │   │   │   ├── entities/
+│   │   │   │   │   └── user.dart                   # 用户实体
+│   │   │   │   └── repositories/
+│   │   │   │       └── auth_repository.dart
+│   │   │   └── presentation/
+│   │   │       ├── pages/
+│   │   │       │   └── login_page.dart             # 登录页（手机号+验证码）
+│   │   │       └── providers/
+│   │   │           └── auth_provider.dart          # 认证状态管理
 │   │   ├── upload/                  # 图片上传与解析
 │   │   │   ├── data/
 │   │   │   │   ├── models/
@@ -149,7 +170,9 @@ enstudy/
 │   │       └── presentation/
 │   │           ├── pages/
 │   │           │   ├── profile_page.dart
-│   │           │   └── data_management_page.dart  # 数据管理页面
+│   │           │   ├── data_management_page.dart  # 数据管理页面
+│   │           │   ├── admin_user_list_page.dart   # 管理员-用户列表
+│   │           │   └── purchase_page.dart          # 购买页面
 │   │           ├── widgets/
 │   │           │   ├── stat_card.dart
 │   │           │   └── level_progress.dart
@@ -327,6 +350,253 @@ enstudy/
 持久化到数据库
 ```
 
+#### 2.3.3 手机号验证码登录流程
+
+```
+用户输入手机号，点击"获取验证码"
+     │
+     ▼
+┌────────────────────────────────┐
+│  客户端调用后端API               │
+│  POST /api/auth/send-code      │
+│  - 参数：phone                  │
+│  - 后端校验手机号格式            │
+│  - 后端检查发送频率限制          │
+└────────────────────────────────┘
+     │
+     ▼
+┌────────────────────────────────┐
+│  后端调用阿里云短信服务          │
+│  - 生成6位随机验证码            │
+│  - 存入Redis（5分钟过期）       │
+│  - 调用阿里云SMS API发送短信    │
+│  - 返回发送成功                 │
+└────────────────────────────────┘
+     │
+     ▼
+用户输入验证码，点击"登录"
+     │
+     ▼
+┌────────────────────────────────┐
+│  客户端调用后端API               │
+│  POST /api/auth/login          │
+│  - 参数：phone + code           │
+└────────────────────────────────┘
+     │
+     ▼
+┌────────────────────────────────┐
+│  后端校验验证码                  │
+│  - 从Redis读取验证码            │
+│  - 对比用户输入                 │
+│  - 校验失败3次后验证码失效       │
+│  - 校验成功后删除验证码          │
+└────────────────────────────────┘
+     │ (验证码正确)
+     ▼
+┌────────────────────────────────┐
+│  后端查询/创建用户               │
+│  - 查询users表是否存在该手机号  │
+│  - 存在 → 更新last_login        │
+│  - 不存在 → 创建新用户(默认10次)│
+└────────────────────────────────┘
+     │
+     ▼
+┌────────────────────────────────┐
+│  后端生成JWT Token              │
+│  - payload: userId, phone,      │
+│    isAdmin, exp(7天)            │
+│  - 返回 Token + 用户信息        │
+└────────────────────────────────┘
+     │
+     ▼
+┌────────────────────────────────┐
+│  客户端保存登录状态              │
+│  - Token存入flutter_secure_     │
+│    storage                      │
+│  - 更新AuthProvider状态         │
+│  - 导航到主页                    │
+└────────────────────────────────┘
+```
+
+#### 2.3.4 AI次数扣减流程
+
+**核心规则：每次使用"智能解析"功能（上传图片→AI分析生成卡片）消耗1次AI使用次数，无论生成多少张卡片。智能识别和自定义要求解析均消耗1次。扣减时同步调用后端API，确保服务端数据一致。**
+
+```
+用户发起智能解析请求（分析图片并生成卡片）
+     │
+     ▼
+┌────────────────────────────────┐
+│  检查剩余AI次数                  │
+│  - 优先从本地缓存读取            │
+│  - quota > 0 → 允许继续         │
+│  - quota <= 0 → 提示购买/联系   │
+└────────────────────────────────┘
+     │ (quota > 0)
+     ▼
+执行AI分析（调用千问多模态API）
+     │
+     ▼
+┌────────────────────────────────┐
+│  分析成功后扣减AI次数            │
+│  - 调用后端API扣减（服务端校验） │
+│  - POST /api/user/consume-quota│
+│  - 后端原子性扣减（WHERE > 0）  │
+│  - 返回扣减后剩余次数            │
+│  - 客户端更新本地缓存            │
+└────────────────────────────────┘
+     │ (扣减成功)
+     ▼
+返回分析结果给用户预览
+```
+
+**购买套餐阶梯定价（购买越多，单价越低）：**
+
+| 套餐 | AI使用次数 | 价格 | 单价 | 折扣 |
+|------|-----------|------|------|------|
+| 体验包 | 50次 | 5元 | 0.10元/次 | - |
+| 基础包 | 100次 | 8元 | 0.08元/次 | 省20% |
+| 进阶包 | 300次 | 18元 | 0.06元/次 | 省40% |
+| 尊享包 | 500次 | 25元 | 0.05元/次 | 省50% |
+
+#### 2.3.5 管理员充值流程
+
+```
+管理员登录（后端验证isAdmin身份）
+     │
+     ▼
+进入用户管理页面
+     │
+     ▼
+┌────────────────────────────────┐
+│  调用后端API获取用户列表         │
+│  GET /api/admin/users           │
+│  - 需要管理员Token鉴权          │
+│  - 返回用户列表+AI次数+积分     │
+└────────────────────────────────┘
+     │
+     ▼
+┌────────────────────────────────┐
+│  管理员修改用户AI次数            │
+│  POST /api/admin/update-quota  │
+│  - 参数：userId, quota/change   │
+│  - 后端原子性更新               │
+│  - 记录变更审计日志             │
+│  - 返回更新后的数据             │
+└────────────────────────────────┘
+     │
+     ▼
+客户端刷新用户数据
+```
+
+#### 2.3.6 数据同步流程
+
+**核心原则：关键数据（积分、AI次数）以服务端为准，客户端本地缓存用于快速展示，变化时同步更新服务端。**
+
+```
+┌──────────────────────────────────────────────────┐
+│                  数据同步策略                       │
+│                                                    │
+│  登录时同步：                                      │
+│  ┌──────────────┐     ┌──────────────┐            │
+│  │  客户端       │────▶│  后端API      │            │
+│  │  登录成功     │     │ GET /api/user │            │
+│  │              │◀────│ /profile      │            │
+│  │  更新本地缓存 │     │ 返回最新数据   │            │
+│  └──────────────┘     └──────────────┘            │
+│                                                    │
+│  数据变化时同步：                                   │
+│  ┌──────────────┐     ┌──────────────┐            │
+│  │  AI次数扣减   │────▶│  POST /api/  │            │
+│  │  积分变化     │     │  user/sync   │            │
+│  │              │◀────│  返回最新数据  │            │
+│  │  更新本地缓存 │     │              │            │
+│  └──────────────┘     └──────────────┘            │
+│                                                    │
+│  定时同步（可选）：                                 │
+│  ┌──────────────┐     ┌──────────────┐            │
+│  │  每5分钟/     │────▶│  GET /api/   │            │
+│  │  页面恢复时   │     │  user/profile│            │
+│  │              │◀────│  返回最新数据  │            │
+│  │  更新本地缓存 │     │              │            │
+│  └──────────────┘     └──────────────┘            │
+└──────────────────────────────────────────────────┘
+```
+
+#### 2.3.7 后端API接口设计
+
+**基础URL：** `https://api.enstudy.com`（开发环境可配置）
+
+| 接口 | 方法 | 说明 | 鉴权 |
+|------|------|------|------|
+| `/api/auth/send-code` | POST | 发送短信验证码 | 无 |
+| `/api/auth/login` | POST | 验证码登录 | 无 |
+| `/api/user/profile` | GET | 获取用户信息（积分、AI次数等） | JWT |
+| `/api/user/consume-quota` | POST | 扣减AI次数 | JWT |
+| `/api/user/sync` | POST | 同步积分等数据变化 | JWT |
+| `/api/admin/users` | GET | 获取用户列表 | 管理员JWT |
+| `/api/admin/update-quota` | POST | 修改用户AI次数 | 管理员JWT |
+
+**请求/响应示例：**
+
+```json
+// POST /api/auth/send-code
+// Request:
+{ "phone": "13800138000" }
+// Response:
+{ "success": true, "message": "验证码已发送" }
+
+// POST /api/auth/login
+// Request:
+{ "phone": "13800138000", "code": "123456" }
+// Response:
+{
+  "success": true,
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "user": {
+    "id": "uuid",
+    "phone": "13800138000",
+    "nickname": "用户138****8000",
+    "avatarUrl": "",
+    "aiQuota": 10,
+    "totalScore": 0,
+    "isAdmin": false
+  }
+}
+
+// GET /api/user/profile
+// Headers: Authorization: Bearer <token>
+// Response:
+{
+  "id": "uuid",
+  "phone": "13800138000",
+  "nickname": "用户138****8000",
+  "avatarUrl": "",
+  "aiQuota": 8,
+  "totalScore": 320,
+  "level": 3,
+  "isAdmin": false
+}
+
+// POST /api/user/consume-quota
+// Headers: Authorization: Bearer <token>
+// Response:
+{
+  "success": true,
+  "remainingQuota": 7
+}
+
+// POST /api/admin/update-quota
+// Headers: Authorization: Bearer <admin-token>
+// Request:
+{ "userId": "uuid", "change": 50 }
+// Response:
+{
+  "success": true,
+  "newQuota": 57
+}
+```
+
 ---
 
 ## 3. 数据库设计
@@ -360,16 +630,18 @@ enstudy/
        │    │
        ▼    ▼
 ┌──────────────┐       ┌──────────────┐
-│ review_logs  │       │  user_profile│
-├──────────────┤       ├──────────────┤
-│ id (PK)      │       │ id (PK)      │
-│ card_id (FK) │       │ total_score  │
-│ session_id(FK)│      │ level        │
-│ quality      │       │ streak_days  │
-│ answered_at  │       │ last_checkin │
-│ game_type    │       │ new_cards_day│
-└──────────────┘       │ remind_time  │
-                       └──────────────┘
+│ review_logs  │       │  user_profile│       ┌──────────────┐
+├──────────────┤       ├──────────────┤       │    users     │
+│ id (PK)      │       │ id (PK)      │       ├──────────────┤
+│ card_id (FK) │       │ user_id (FK) │◀──────│ id (PK)      │
+│ session_id(FK)│      │ total_score  │       │ phone        │
+│ quality      │       │ level        │       │ nickname     │
+│ answered_at  │       │ streak_days  │       │ avatar_url   │
+│ game_type    │       │ last_checkin │       │ ai_quota     │
+└──────────────┘       │ new_cards_day│       │ is_admin     │
+                       │ remind_time  │       │ created_at   │
+                       └──────────────┘       │ last_login   │
+                                              └──────────────┘
 ```
 
 ### 3.2 表结构详细设计
@@ -428,17 +700,45 @@ enstudy/
 | answered_at | INTEGER | NOT NULL | 答题时间 |
 | game_type | TEXT | | 来源游戏类型 |
 
-#### user_profile 表
+#### users 表（服务端PostgreSQL）
+
+| 字段 | 类型 | 约束 | 说明 |
+|------|------|------|------|
+| id | VARCHAR(36) | PK | UUID主键 |
+| phone | VARCHAR(20) | UNIQUE, NOT NULL | 手机号，唯一标识 |
+| nickname | VARCHAR(50) | DEFAULT '' | 用户昵称 |
+| avatar_url | VARCHAR(500) | DEFAULT '' | 头像URL |
+| ai_quota | INT | DEFAULT 10 | AI智能解析剩余次数 |
+| total_score | INT | DEFAULT 0 | 累计积分 |
+| level | INT | DEFAULT 1 | 用户等级 |
+| is_admin | TINYINT | DEFAULT 0 | 是否管理员(0否/1是) |
+| created_at | DATETIME | NOT NULL | 注册时间 |
+| last_login | DATETIME | NULL | 最后登录时间 |
+
+**说明：**
+- 用户表存储在服务端PostgreSQL数据库，客户端不再维护本地Users表
+- 手机号为唯一标识，注册后不可更改
+- 新用户注册默认赠送10次AI使用次数
+- total_score 记录用户通过学习游戏等获得的累计积分
+- level 根据积分自动计算
+- is_admin 由后端管理，初始管理员通过数据库直接设置
+
+#### user_profile 表（本地SQLite）
 
 | 字段 | 类型 | 约束 | 说明 |
 |------|------|------|------|
 | id | TEXT | PK | 固定为'default' |
-| total_score | INTEGER | DEFAULT 0 | 总积分 |
+| user_id | TEXT | | 关联服务端用户ID |
+| total_score | INTEGER | DEFAULT 0 | 总积分（本地缓存） |
 | level | INTEGER | DEFAULT 1 | 等级 |
 | streak_days | INTEGER | DEFAULT 0 | 连续打卡天数 |
 | last_checkin | INTEGER | | 上次打卡时间 |
 | new_cards_per_day | INTEGER | DEFAULT 10 | 每日新卡数 |
 | remind_time | TEXT | DEFAULT '08:00' | 提醒时间 |
+
+**说明：**
+- user_profile 仍保留在本地SQLite，存储学习偏好和打卡等本地数据
+- total_score/level 本地缓存，登录时从服务端同步
 
 ---
 
@@ -821,6 +1121,8 @@ enum ConflictStrategy { keepNewer, overwrite, skip }
 | flutter_animate | ^4.5.0 | 动画效果 |
 | confetti | ^0.7.0 | 庆祝动画（游戏结算） |
 | mocktail | ^1.0.0 | 单元测试Mock框架 |
+| fluwx | ^4.0.0 | 微信SDK（登录、分享） |
+| flutter_dotenv | ^5.1.0 | 环境变量配置（.env文件加载） |
 | flutter_test | SDK | Widget测试和集成测试 |
 
 ---
@@ -844,12 +1146,16 @@ enum ConflictStrategy { keepNewer, overwrite, skip }
 │  ApiConfig (api_config.dart)                       │
 │  ├── 百度OCR API Key 默认值                        │
 │  ├── 百度OCR Secret Key 默认值                     │
-│  └── DeepSeek API Key 默认值                       │
+│  ├── DeepSeek API Key 默认值                       │
+│  └── adminWechatIds 管理员微信号列表                │
 │                                                    │
 │  flutter_secure_storage (用户覆盖)                  │
 │  ├── key: baidu_ocr_api_key                        │
 │  ├── key: baidu_ocr_secret_key                     │
 │  └── key: deepseek_api_key                         │
+│                                                    │
+│  .env 环境变量配置                                  │
+│  └── ADMIN_WECHAT_IDS=smarkfire,admin2             │
 └──────────────────────────────────────────────────┘
 ```
 
@@ -859,6 +1165,13 @@ class ApiConfig {
   static const String baiduOcrApiKey = 'default_baidu_api_key';
   static const String baiduOcrSecretKey = 'default_baidu_secret_key';
   static const String deepseekApiKey = 'default_deepseek_api_key';
+
+  // 管理员微信号列表（从.env文件读取 ADMIN_WECHAT_IDS）
+  static List<String> get adminWechatIds {
+    const ids = String.fromEnvironment('ADMIN_WECHAT_IDS', defaultValue: '');
+    if (ids.isEmpty) return [];
+    return ids.split(',').map((id) => id.trim()).toList();
+  }
 }
 
 // 密钥获取逻辑
@@ -873,6 +1186,10 @@ Future<String> getApiKey(String key, String defaultValue) async {
 - 图片存储在应用沙盒目录，其他应用不可访问
 - 网络请求仅在与百度OCR/DeepSeek服务通信时使用，核心功能离线可用
 - Web平台安全存储使用 Window.localStorage，敏感数据需注意XSS防护
+- JWT Token安全存储，使用flutter_secure_storage加密保存，不明文存储到本地文件
+- AI次数扣减使用乐观锁，防止并发超扣（UPDATE WHERE ai_quota > 0，检查affected rows）
+- 管理员操作需验证admin身份（后端JWT Token中包含isAdmin字段，API层校验）
+- 次数变更记录审计日志，包含操作人、目标用户、变更前后值、操作时间
 
 ### 6.2 性能优化
 - 图片上传前压缩至 500KB 以内
@@ -1063,3 +1380,201 @@ Web 平台无法使用本地文件路径，采用 blob URL 方案：
 | OCR识别 | ✅ 支持 | 需CORS代理 |
 | 游戏模块 | ✅ 支持 | 纯Dart实现，无平台限制 |
 | 数据导入导出 | ⚠️ 部分支持 | 使用浏览器下载/文件选择替代原生文件操作 |
+
+---
+
+## 8. 后端服务架构
+
+### 8.1 技术栈
+
+| 组件 | 技术选型 | 说明 |
+|------|---------|------|
+| 运行时 | Python 3.11+ | 类型提示完善，生态丰富 |
+| Web框架 | FastAPI | 高性能异步框架，自动生成OpenAPI文档，Pydantic数据校验 |
+| 数据库 | PostgreSQL 16 | 功能最强大的开源关系型数据库，JSONB支持、事务完善 |
+| ORM | SQLAlchemy 2.0 + Alembic | Python最成熟的ORM，Alembic管理数据库迁移 |
+| 缓存 | Redis 7 | 验证码临时存储、Token黑名单 |
+| 认证 | JWT (PyJWT) | 无状态Token认证 |
+| 短信服务 | 阿里云短信 (dysmsapi) | 国内稳定，到达率高 |
+| 部署 | Docker + Nginx | 容器化部署，Nginx反向代理+SSL |
+
+### 8.2 后端项目结构
+
+```
+enstudy-server/                     # 后端服务（独立项目）
+├── app/
+│   ├── main.py                   # FastAPI应用入口
+│   ├── config.py                 # 配置管理（Pydantic Settings）
+│   ├── database.py               # SQLAlchemy引擎+会话管理
+│   ├── models/                   # SQLAlchemy ORM模型
+│   │   ├── __init__.py
+│   │   ├── user.py               # User模型
+│   │   └── quota_log.py          # QuotaChangeLog模型
+│   ├── schemas/                  # Pydantic请求/响应模型
+│   │   ├── __init__.py
+│   │   ├── auth.py               # 登录/验证码请求响应
+│   │   ├── user.py               # 用户信息请求响应
+│   │   └── admin.py              # 管理员操作请求响应
+│   ├── routers/                  # API路由
+│   │   ├── __init__.py
+│   │   ├── auth.py               # 认证路由（发送验证码/登录）
+│   │   ├── user.py               # 用户路由（个人信息/同步数据）
+│   │   └── admin.py              # 管理员路由（用户列表/充值）
+│   ├── services/                 # 业务逻辑层
+│   │   ├── __init__.py
+│   │   ├── sms_service.py        # 阿里云短信服务
+│   │   ├── auth_service.py       # 认证服务（验证码校验/Token生成）
+│   │   ├── user_service.py       # 用户服务（CRUD/数据同步）
+│   │   └── admin_service.py      # 管理员服务（用户管理/充值）
+│   ├── middleware/                # 中间件
+│   │   ├── __init__.py
+│   │   └── auth.py               # JWT认证依赖注入
+│   └── utils/                    # 工具函数
+│       ├── __init__.py
+│       ├── response.py           # 统一响应格式
+│       └── validator.py          # 参数校验
+├── alembic/                      # 数据库迁移
+│   ├── env.py
+│   └── versions/
+├── alembic.ini
+├── docker-compose.yml
+├── Dockerfile
+├── requirements.txt
+├── pyproject.toml
+└── .env                          # 服务端环境变量
+```
+
+### 8.3 阿里云短信服务集成
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│  客户端       │     │  后端服务     │     │  阿里云短信   │
+│  请求验证码   │────▶│  生成6位码    │     │              │
+│              │     │  存入Redis    │────▶│  调用SMS API │
+│              │     │  (5分钟过期)  │     │  发送短信     │
+│              │◀────│  返回成功     │◀────│  返回结果     │
+└──────────────┘     └──────────────┘     └──────────────┘
+```
+
+**阿里云短信配置：**
+- 签名名称：EnStudy（需在阿里云申请短信签名）
+- 模板Code：SMS_XXXXXX（需在阿里云申请验证码模板）
+- 模板内容：您的验证码为${code}，5分钟内有效，请勿泄露。
+- AccessKey：从阿里云RAM控制台获取，存入服务端.env
+
+**防刷策略：**
+- 同一手机号60秒内不可重复发送
+- 同一手机号每天最多发送10次
+- 同一IP每分钟最多发送5次
+- 验证码校验失败3次后自动失效
+
+### 8.4 JWT认证机制
+
+```
+登录成功 → 生成JWT Token (PyJWT)
+  - Header: { alg: HS256, typ: JWT }
+  - Payload: { userId, phone, isAdmin, iat, exp(7天) }
+  - Signature: HMACSHA256(base64(header) + "." + base64(payload), JWT_SECRET)
+
+客户端请求 → Authorization: Bearer <token>
+  → FastAPI Depends依赖注入校验Token
+  → 解析payload获取userId/isAdmin
+  → 注入当前请求上下文
+
+Token刷新策略：
+  - Token有效期7天
+  - 过期后需重新登录
+  - 不支持自动刷新（移动端场景下7天足够）
+```
+
+### 8.5 数据库设计（PostgreSQL）
+
+```sql
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  phone VARCHAR(20) UNIQUE NOT NULL,
+  nickname VARCHAR(50) DEFAULT '',
+  avatar_url VARCHAR(500) DEFAULT '',
+  ai_quota INTEGER DEFAULT 10,
+  total_score INTEGER DEFAULT 0,
+  level INTEGER DEFAULT 1,
+  is_admin SMALLINT DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  last_login TIMESTAMP NULL
+);
+
+CREATE INDEX idx_users_phone ON users(phone);
+CREATE INDEX idx_users_is_admin ON users(is_admin);
+
+CREATE TABLE quota_change_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  change_amount INTEGER NOT NULL,
+  before_quota INTEGER NOT NULL,
+  after_quota INTEGER NOT NULL,
+  reason VARCHAR(200) NOT NULL,
+  operator_id UUID NULL REFERENCES users(id),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_quota_logs_user_id ON quota_change_logs(user_id);
+CREATE INDEX idx_quota_logs_created_at ON quota_change_logs(created_at);
+```
+
+### 8.6 部署架构
+
+```
+                    ┌─────────────┐
+                    │   Nginx     │
+                    │  (SSL/443)  │
+                    └──────┬──────┘
+                           │
+              ┌────────────┼────────────┐
+              │            │            │
+     ┌────────▼───┐  ┌────▼────┐  ┌───▼────────┐
+     │  前端静态   │  │  后端API │  │  管理后台   │
+     │  (Flutter  │  │ (FastAPI │  │  (可选)     │
+     │   Web)     │  │  :8000)  │  │            │
+     └────────────┘  └────┬─────┘  └────────────┘
+                          │
+              ┌───────────┼───────────┐
+              │           │           │
+     ┌────────▼──┐ ┌─────▼─────┐ ┌──▼────────┐
+     │ PostgreSQL│ │  Redis    │ │  阿里云SMS │
+     │  (:5432)  │ │  (:6379)  │ │  (外部API) │
+     └───────────┘ └───────────┘ └───────────┘
+```
+
+### 8.7 客户端-服务端交互架构
+
+```
+┌──────────────────────────────────────────────────────┐
+│                    Flutter 客户端                      │
+│                                                        │
+│  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐ │
+│  │ AuthProvider │  │ ApiClient    │  │ 本地缓存     │ │
+│  │ (Riverpod)  │  │ (Dio+JWT)    │  │ (SQLite)    │ │
+│  └──────┬──────┘  └──────┬───────┘  └──────┬──────┘ │
+│         │                │                  │         │
+│         └────────────────┼──────────────────┘         │
+│                          │                             │
+└──────────────────────────┼─────────────────────────────┘
+                           │ HTTPS
+                           │
+┌──────────────────────────┼─────────────────────────────┐
+│                    后端服务 (FastAPI)                    │
+│                          │                             │
+│  ┌───────────────────────▼───────────────────────┐    │
+│  │              FastAPI Router                    │    │
+│  │  /api/auth/*  →  无需鉴权                      │    │
+│  │  /api/user/*  →  JWT鉴权                       │    │
+│  │  /api/admin/* →  JWT + 管理员鉴权              │    │
+│  └───────────────────────┬───────────────────────┘    │
+│                          │                             │
+│  ┌───────────┐  ┌───────▼───────┐  ┌───────────┐    │
+│  │ SMS服务   │  │ 业务Service   │  │ 数据访问   │    │
+│  │ (阿里云)  │  │ (auth/user/   │  │ (SQLAlchemy │    │
+│  │           │  │  admin)       │  │  + Redis)   │    │
+│  └───────────┘  └───────────────┘  └───────────┘    │
+└──────────────────────────────────────────────────────┘
+```

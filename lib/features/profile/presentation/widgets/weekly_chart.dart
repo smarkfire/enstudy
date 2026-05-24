@@ -16,7 +16,7 @@ class WeeklyChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      size: Size(double.infinity, 160),
+      size: const Size(double.infinity, 160),
       painter: _WeeklyChartPainter(data: data),
     );
   }
@@ -33,17 +33,18 @@ class _WeeklyChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final barAreaHeight = size.height - 28;
     final barWidth = (size.width - 40) / 7;
-    final maxValue = data.isEmpty ? 1 : data.reduce(max).clamp(1, double.maxFinite.toInt());
+    final maxValue =
+        data.isEmpty ? 1 : data.reduce(max).clamp(1, double.maxFinite.toInt());
 
     final barPaint = Paint()
       ..color = AppColors.primary
       ..style = PaintingStyle.fill;
 
     final barPaintInactive = Paint()
-      ..color = AppColors.primary.withOpacity(0.15)
+      ..color = AppColors.primary.withValues(alpha: 0.15)
       ..style = PaintingStyle.fill;
 
-    final textStyle = TextStyle(
+    const textStyle = TextStyle(
       color: AppColors.textSecondary,
       fontSize: 11,
     );
@@ -51,7 +52,8 @@ class _WeeklyChartPainter extends CustomPainter {
     for (int i = 0; i < 7; i++) {
       final x = 20.0 + i * barWidth;
       final value = i < data.length ? data[i] : 0;
-      final barHeight = maxValue > 0 ? (value / maxValue) * (barAreaHeight - 20) : 0.0;
+      final barHeight =
+          maxValue > 0 ? (value / maxValue) * (barAreaHeight - 20) : 0.0;
       final barRect = RRect.fromRectAndRadius(
         Rect.fromLTWH(
           x + barWidth * 0.2,
@@ -92,7 +94,7 @@ class _WeeklyChartPainter extends CustomPainter {
         final valueTextPainter = TextPainter(
           text: TextSpan(
             text: '$value',
-            style: TextStyle(
+            style: const TextStyle(
               color: AppColors.primary,
               fontSize: 10,
               fontWeight: FontWeight.w600,

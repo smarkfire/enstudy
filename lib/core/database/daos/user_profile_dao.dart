@@ -24,7 +24,9 @@ class UserProfileDao extends DatabaseAccessor<AppDatabase>
 
   Future<void> updateStreak(int streakDays, int lastCheckin) =>
       (update(userProfiles)..where((t) => t.id.equals('default'))).write(
-          UserProfilesCompanion(
-              streakDays: Value(streakDays),
-              lastCheckin: Value(lastCheckin)));
+        UserProfilesCompanion(
+          streakDays: Value(streakDays),
+          lastCheckin: Value(lastCheckin),
+        ),
+      );
 }

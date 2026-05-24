@@ -46,26 +46,28 @@ class DailyTaskNotifier extends StateNotifier<DailyTaskState> {
   final UserProfileDao _userProfileDao;
 
   DailyTaskNotifier(this._userProfileDao)
-      : super(const DailyTaskState(
-          reviewTask: DailyTask(
-            taskId: 'daily_review',
-            title: '每日复习',
-            description: '完成今日复习任务',
-            reward: 10,
+      : super(
+          const DailyTaskState(
+            reviewTask: DailyTask(
+              taskId: 'daily_review',
+              title: '每日复习',
+              description: '完成今日复习任务',
+              reward: 10,
+            ),
+            gameTask: DailyTask(
+              taskId: 'daily_game',
+              title: '每日游戏',
+              description: '完成一次游戏',
+              reward: 10,
+            ),
+            newCardTask: DailyTask(
+              taskId: 'daily_new_card',
+              title: '每日新卡',
+              description: '学习新卡片',
+              reward: 10,
+            ),
           ),
-          gameTask: DailyTask(
-            taskId: 'daily_game',
-            title: '每日游戏',
-            description: '完成一次游戏',
-            reward: 10,
-          ),
-          newCardTask: DailyTask(
-            taskId: 'daily_new_card',
-            title: '每日新卡',
-            description: '学习新卡片',
-            reward: 10,
-          ),
-        ));
+        );
 
   Future<void> checkDailyTasks() async {
     final profileRow = await _userProfileDao.getProfile().first;

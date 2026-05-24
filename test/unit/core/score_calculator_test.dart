@@ -38,7 +38,9 @@ void main() {
         );
 
         expect(
-            result, GameConstants.pointsPerCorrectAnswer + GameConstants.pointsPerStreak);
+          result,
+          GameConstants.pointsPerCorrectAnswer + GameConstants.pointsPerStreak,
+        );
       });
 
       test('正确答题但未达到连击阈值时无额外加成', () {
@@ -67,7 +69,8 @@ void main() {
       test('连击达到最大倍数后不再增加', () {
         final result = calculator.calculateStreakBonus(30);
 
-        expect(result, GameConstants.pointsPerStreak * GameConstants.maxStreakMultiplier);
+        expect(result,
+            GameConstants.pointsPerStreak * GameConstants.maxStreakMultiplier);
       });
 
       test('刚好达到连击阈值时获得基础加成', () {
@@ -80,7 +83,7 @@ void main() {
 
     group('完美通关', () {
       test('完美通关加成包含所有正确答题积分和最大连击加成', () {
-        final totalQuestions = 10;
+        const totalQuestions = 10;
         final result = calculator.calculatePerfectGame(totalQuestions);
 
         expect(

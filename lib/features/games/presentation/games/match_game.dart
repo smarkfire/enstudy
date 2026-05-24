@@ -173,7 +173,7 @@ class _MatchGameState extends ConsumerState<MatchGame>
         },
         child: _buildCardContainer(
           text: item.text,
-          backgroundColor: AppColors.success.withOpacity(0.3),
+          backgroundColor: AppColors.success.withValues(alpha: 0.3),
           borderColor: AppColors.success,
         ),
       );
@@ -183,7 +183,7 @@ class _MatchGameState extends ConsumerState<MatchGame>
     Color borderColor = Colors.transparent;
 
     if (isSelected) {
-      bgColor = AppColors.primaryLight.withOpacity(0.2);
+      bgColor = AppColors.primaryLight.withValues(alpha: 0.2);
       borderColor = AppColors.primary;
     }
 
@@ -206,7 +206,7 @@ class _MatchGameState extends ConsumerState<MatchGame>
         },
         child: _buildCardContainer(
           text: item.text,
-          backgroundColor: AppColors.error.withOpacity(0.2),
+          backgroundColor: AppColors.error.withValues(alpha: 0.2),
           borderColor: AppColors.error,
         ),
       );
@@ -234,7 +234,7 @@ class _MatchGameState extends ConsumerState<MatchGame>
         },
         child: _buildCardContainer(
           text: item.text,
-          backgroundColor: AppColors.success.withOpacity(0.3),
+          backgroundColor: AppColors.success.withValues(alpha: 0.3),
           borderColor: AppColors.success,
         ),
       );
@@ -244,7 +244,7 @@ class _MatchGameState extends ConsumerState<MatchGame>
     Color borderColor = Colors.transparent;
 
     if (isSelected) {
-      bgColor = AppColors.accent.withOpacity(0.2);
+      bgColor = AppColors.accent.withValues(alpha: 0.2);
       borderColor = AppColors.accent;
     }
 
@@ -267,7 +267,7 @@ class _MatchGameState extends ConsumerState<MatchGame>
         },
         child: _buildCardContainer(
           text: item.text,
-          backgroundColor: AppColors.error.withOpacity(0.2),
+          backgroundColor: AppColors.error.withValues(alpha: 0.2),
           borderColor: AppColors.error,
         ),
       );
@@ -299,7 +299,7 @@ class _MatchGameState extends ConsumerState<MatchGame>
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -332,6 +332,5 @@ class _MatchItem {
     required this.id,
     required this.text,
     required this.card,
-    this.isMatched = false,
-  });
+  }) : isMatched = false;
 }

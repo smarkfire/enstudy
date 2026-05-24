@@ -27,7 +27,7 @@ class RecentUploadItem extends StatelessWidget {
               _buildThumbnail(),
               const SizedBox(width: 12),
               Expanded(child: _buildInfo(context)),
-              Icon(
+              const Icon(
                 Icons.chevron_right,
                 color: AppColors.textHint,
                 size: 20,
@@ -53,7 +53,7 @@ class RecentUploadItem extends StatelessWidget {
         ),
       ),
       child: thumbnailPath.isEmpty
-          ? Icon(
+          ? const Icon(
               Icons.image_outlined,
               color: AppColors.textHint,
               size: 24,

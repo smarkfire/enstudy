@@ -4,6 +4,7 @@ import 'daos/card_dao.dart';
 import 'daos/source_dao.dart';
 import 'daos/game_session_dao.dart';
 import 'daos/review_log_dao.dart';
+import 'daos/user_dao.dart';
 import 'daos/user_profile_dao.dart';
 
 part 'app_database.g.dart';
@@ -87,34 +88,63 @@ class UserProfiles extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@DataClassName('UserRow')
+class Users extends Table {
+  TextColumn get id => text()();
+  TextColumn get wechatId => text().unique()();
+  TextColumn get nickname => text().withDefault(const Constant(''))();
+  TextColumn get avatarUrl => text().withDefault(const Constant(''))();
+  IntColumn get aiQuota => integer().withDefault(const Constant(10))();
+  IntColumn get createdAt => integer()();
+  IntColumn get lastLoginAt => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
-  tables: [Cards, Sources, GameSessions, ReviewLogs, UserProfiles],
-  daos: [CardDao, SourceDao, GameSessionDao, ReviewLogDao, UserProfileDao],
+  tables: [Cards, Sources, GameSessions, ReviewLogs, UserProfiles, Users],
+  daos: [CardDao, SourceDao, GameSessionDao, ReviewLogDao, UserProfileDao, UserDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
           await m.createAll();
           await customStatement(
-              'CREATE INDEX IF NOT EXISTS idx_cards_status ON cards (status)');
+            'CREATE INDEX IF NOT EXISTS idx_cards_status ON cards (status)',
+          );
           await customStatement(
-              'CREATE INDEX IF NOT EXISTS idx_cards_next_review ON cards (next_review)');
+            'CREATE INDEX IF NOT EXISTS idx_cards_next_review ON cards (next_review)',
+          );
           await customStatement(
-              'CREATE INDEX IF NOT EXISTS idx_cards_created_at ON cards (created_at)');
+            'CREATE INDEX IF NOT EXISTS idx_cards_created_at ON cards (created_at)',
+          );
           await customStatement(
-              'CREATE INDEX IF NOT EXISTS idx_review_logs_card_id ON review_logs (card_id)');
+            'CREATE INDEX IF NOT EXISTS idx_review_logs_card_id ON review_logs (card_id)',
+          );
           await customStatement(
-              'CREATE INDEX IF NOT EXISTS idx_review_logs_session_id ON review_logs (session_id)');
+            'CREATE INDEX IF NOT EXISTS idx_review_logs_session_id ON review_logs (session_id)',
+          );
           await customStatement(
-              'CREATE INDEX IF NOT EXISTS idx_review_logs_answered_at ON review_logs (answered_at)');
+            'CREATE INDEX IF NOT EXISTS idx_review_logs_answered_at ON review_logs (answered_at)',
+          );
           await customStatement(
-              'CREATE INDEX IF NOT EXISTS idx_game_sessions_game_type ON game_sessions (game_type)');
+            'CREATE INDEX IF NOT EXISTS idx_game_sessions_game_type ON game_sessions (game_type)',
+          );
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS idx_users_wechat_id ON users (wechat_id)',
+          );
+        },
+        onUpgrade: (Migrator m, int from, int to) async {
+          if (from < 2) {
+            await m.createTable(users);
+          }
         },
       );
 }

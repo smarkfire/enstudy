@@ -18,7 +18,9 @@ class MarkDetectorService {
     final regions = _findRegions(mask, image.width, image.height);
     final merged = _mergeCloseRegions(regions);
 
-    return merged.where((r) => r.width >= _minRegionSize || r.height >= _minRegionSize).toList();
+    return merged
+        .where((r) => r.width >= _minRegionSize || r.height >= _minRegionSize)
+        .toList();
   }
 
   List<List<int>> _createHighlightMask(Image image) {
@@ -56,10 +58,7 @@ class MarkDetectorService {
   }
 
   bool _isPink(int r, int g, int b) {
-    return r > _pinkThreshold &&
-        g < 120 &&
-        b > 120 &&
-        (r - g) > 80;
+    return r > _pinkThreshold && g < 120 && b > 120 && (r - g) > 80;
   }
 
   bool _isGreen(int r, int g, int b) {
@@ -81,18 +80,21 @@ class MarkDetectorService {
       for (int x = 0; x < width; x++) {
         if (!visited[y][x] && mask[y][x] > 0) {
           final markType = mask[y][x];
-          final bounds = _floodFill(mask, visited, x, y, markType, width, height);
+          final bounds =
+              _floodFill(mask, visited, x, y, markType, width, height);
           if (bounds != null) {
             final color = _getColorForType(markType);
             final type = _getMarkTypeForColor(markType);
-            regions.add(MarkRegion(
-              left: bounds[0].toDouble(),
-              top: bounds[1].toDouble(),
-              width: (bounds[2] - bounds[0]).toDouble(),
-              height: (bounds[3] - bounds[1]).toDouble(),
-              markColor: color,
-              markType: type,
-            ));
+            regions.add(
+              MarkRegion(
+                left: bounds[0].toDouble(),
+                top: bounds[1].toDouble(),
+                width: (bounds[2] - bounds[0]).toDouble(),
+                height: (bounds[3] - bounds[1]).toDouble(),
+                markColor: color,
+                markType: type,
+              ),
+            );
           }
         }
       }
@@ -113,7 +115,9 @@ class MarkDetectorService {
     int minX = startX, maxX = startX;
     int minY = startY, maxY = startY;
 
-    final queue = <List<int>>[[startX, startY]];
+    final queue = <List<int>>[
+      [startX, startY]
+    ];
     visited[startY][startX] = true;
 
     while (queue.isNotEmpty) {
@@ -136,8 +140,12 @@ class MarkDetectorService {
       for (final neighbor in neighbors) {
         final nx = neighbor[0];
         final ny = neighbor[1];
-        if (nx >= 0 && nx < width && ny >= 0 && ny < height &&
-            !visited[ny][nx] && mask[ny][nx] == targetMarkType) {
+        if (nx >= 0 &&
+            nx < width &&
+            ny >= 0 &&
+            ny < height &&
+            !visited[ny][nx] &&
+            mask[ny][nx] == targetMarkType) {
           visited[ny][nx] = true;
           queue.add([nx, ny]);
         }
@@ -158,7 +166,8 @@ class MarkDetectorService {
 
       for (int j = 0; j < merged.length; j++) {
         final existing = merged[j];
-        if (existing.markType == current.markType && _isClose(existing, current)) {
+        if (existing.markType == current.markType &&
+            _isClose(existing, current)) {
           merged[j] = _mergeTwo(existing, current);
           wasMerged = true;
           break;
@@ -184,8 +193,10 @@ class MarkDetectorService {
     final bTop = b.top;
     final bBottom = b.top + b.height;
 
-    final horizontalClose = aRight + _mergeDistance >= bLeft && bRight + _mergeDistance >= aLeft;
-    final verticalClose = aBottom + _mergeDistance >= bTop && bBottom + _mergeDistance >= aTop;
+    final horizontalClose =
+        aRight + _mergeDistance >= bLeft && bRight + _mergeDistance >= aLeft;
+    final verticalClose =
+        aBottom + _mergeDistance >= bTop && bBottom + _mergeDistance >= aTop;
 
     return horizontalClose && verticalClose;
   }

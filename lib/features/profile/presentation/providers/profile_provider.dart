@@ -65,7 +65,7 @@ class ProfileNotifier extends AsyncNotifier<UserProfile> {
   Future<UserProfile> loadProfile() async {
     final profileRow = await _userProfileDao.getProfile().first;
     if (profileRow == null) {
-      final defaultProfile = UserProfile(
+      const defaultProfile = UserProfile(
         id: 'default',
         totalScore: 0,
         level: 1,
@@ -174,7 +174,8 @@ class ProfileNotifier extends AsyncNotifier<UserProfile> {
           .subtract(const Duration(milliseconds: 1))
           .millisecondsSinceEpoch;
 
-      final logs = await _reviewLogDao.getLogsByDateRange(startOfDay, endOfDay).first;
+      final logs =
+          await _reviewLogDao.getLogsByDateRange(startOfDay, endOfDay).first;
       stats.add(logs.length);
     }
 
@@ -214,7 +215,11 @@ final profileStatsProvider = FutureProvider<ProfileStats>((ref) async {
 
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
-  final todayDueCount = allCards.where((c) => c.nextReview <= today.millisecondsSinceEpoch && c.status != 'mastered').length;
+  final todayDueCount = allCards
+      .where((c) =>
+          c.nextReview <= today.millisecondsSinceEpoch &&
+          c.status != 'mastered')
+      .length;
 
   return ProfileStats(
     totalCards: totalCards,

@@ -27,7 +27,9 @@ class _FillBlankGameState extends ConsumerState<FillBlankGame> {
   @override
   void initState() {
     super.initState();
-    _cards = widget.cards.where((c) => c.example != null && c.example!.isNotEmpty).toList();
+    _cards = widget.cards
+        .where((c) => c.example != null && c.example!.isNotEmpty)
+        .toList();
     if (_cards.isEmpty) {
       _cards = widget.cards;
     }
@@ -115,7 +117,7 @@ class _FillBlankGameState extends ConsumerState<FillBlankGame> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -125,7 +127,8 @@ class _FillBlankGameState extends ConsumerState<FillBlankGame> {
               children: [
                 const Row(
                   children: [
-                    Icon(Icons.format_quote, color: AppColors.primary, size: 20),
+                    Icon(Icons.format_quote,
+                        color: AppColors.primary, size: 20),
                     SizedBox(width: 4),
                     Text(
                       '填入正确的单词',
@@ -153,7 +156,7 @@ class _FillBlankGameState extends ConsumerState<FillBlankGame> {
                   const SizedBox(height: 8),
                   Text(
                     card.exampleTranslation!,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,
                     ),
@@ -170,7 +173,7 @@ class _FillBlankGameState extends ConsumerState<FillBlankGame> {
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: AppColors.error.withOpacity(0.1),
+                color: AppColors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: AppColors.error),
               ),
@@ -194,7 +197,7 @@ class _FillBlankGameState extends ConsumerState<FillBlankGame> {
           const SizedBox(height: 16),
           Text(
             '${_currentIndex + 1} / ${_cards.length}',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               color: AppColors.textSecondary,
             ),
@@ -215,16 +218,16 @@ class _FillBlankGameState extends ConsumerState<FillBlankGame> {
 
     if (_answered) {
       if (option.id == correctId) {
-        bgColor = AppColors.success.withOpacity(0.1);
+        bgColor = AppColors.success.withValues(alpha: 0.1);
         borderColor = AppColors.success;
         textColor = AppColors.success;
       } else if (isSelected && option.id != correctId) {
-        bgColor = AppColors.error.withOpacity(0.1);
+        bgColor = AppColors.error.withValues(alpha: 0.1);
         borderColor = AppColors.error;
         textColor = AppColors.error;
       }
     } else if (isSelected) {
-      bgColor = AppColors.primary.withOpacity(0.1);
+      bgColor = AppColors.primary.withValues(alpha: 0.1);
       borderColor = AppColors.primary;
       textColor = AppColors.primary;
     }
@@ -240,7 +243,7 @@ class _FillBlankGameState extends ConsumerState<FillBlankGame> {
           border: Border.all(color: borderColor, width: 2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -253,7 +256,9 @@ class _FillBlankGameState extends ConsumerState<FillBlankGame> {
               const Icon(Icons.check_circle, color: AppColors.success, size: 18)
             else if (_answered && isSelected && option.id != correctId)
               const Icon(Icons.cancel, color: AppColors.error, size: 18),
-            if (_answered && (option.id == correctId || (isSelected && option.id != correctId)))
+            if (_answered &&
+                (option.id == correctId ||
+                    (isSelected && option.id != correctId)))
               const SizedBox(width: 6),
             Text(
               option.content,

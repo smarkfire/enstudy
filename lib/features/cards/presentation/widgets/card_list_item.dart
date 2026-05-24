@@ -90,7 +90,7 @@ class CardListItem extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _statusColor(card.status).withOpacity(0.15),
+                      color: _statusColor(card.status).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -108,7 +108,7 @@ class CardListItem extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   card.phonetic!,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textHint,
                     fontStyle: FontStyle.italic,
@@ -149,7 +149,7 @@ class CardListItem extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Icon(
+                  const Icon(
                     Icons.repeat,
                     size: 14,
                     color: AppColors.textHint,

@@ -75,13 +75,13 @@ class GamePlayPage extends ConsumerWidget {
                   Icon(
                     Icons.timer_outlined,
                     size: 18,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                   const SizedBox(width: 4),
                   Text(
                     _formatTime(gameState.timeElapsed),
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),

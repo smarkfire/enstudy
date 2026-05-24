@@ -101,29 +101,32 @@ class _ShootingGameState extends ConsumerState<ShootingGame>
 
     _flyingWords = _flyingWords.where((w) => !w.isCurrent).toList();
 
-    _flyingWords.add(_FlyingWord(
-      card: card,
-      x: -0.15,
-      y: 0.1 + random.nextDouble() * 0.25,
-      isCurrent: true,
-    ));
+    _flyingWords.add(
+      _FlyingWord(
+        card: card,
+        x: -0.15,
+        y: 0.1 + random.nextDouble() * 0.25,
+        isCurrent: true,
+      ),
+    );
 
     _generateTargets(card);
   }
 
   void _generateTargets(domain.Card correctCard) {
-    final others =
-        widget.cards.where((c) => c.id != correctCard.id).toList();
+    final others = widget.cards.where((c) => c.id != correctCard.id).toList();
     others.shuffle(Random());
     final distractors = others.take(2).toList();
     final allTargets = [correctCard, ...distractors]..shuffle(Random());
 
     _targets = allTargets
-        .map((c) => _Target(
-              card: c,
-              isCorrect: c.id == correctCard.id,
-              isWrong: false,
-            ))
+        .map(
+          (c) => _Target(
+            card: c,
+            isCorrect: c.id == correctCard.id,
+            isWrong: false,
+          ),
+        )
         .toList();
   }
 
@@ -131,8 +134,8 @@ class _ShootingGameState extends ConsumerState<ShootingGame>
     if (_isFinished) return;
 
     final target = _targets[index];
-    final currentWord =
-        _flyingWords.firstWhere((w) => w.isCurrent, orElse: () => _flyingWords.first);
+    final currentWord = _flyingWords.firstWhere((w) => w.isCurrent,
+        orElse: () => _flyingWords.first);
 
     if (target.isCorrect) {
       setState(() {
@@ -236,7 +239,7 @@ class _ShootingGameState extends ConsumerState<ShootingGame>
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -261,8 +264,11 @@ class _ShootingGameState extends ConsumerState<ShootingGame>
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.star_rounded,
-                  color: AppColors.accent, size: 22),
+              const Icon(
+                Icons.star_rounded,
+                color: AppColors.accent,
+                size: 22,
+              ),
               const SizedBox(width: 4),
               Text(
                 '$_score',
@@ -278,7 +284,7 @@ class _ShootingGameState extends ConsumerState<ShootingGame>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.error.withOpacity(0.1),
+                color: AppColors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -319,8 +325,9 @@ class _ShootingGameState extends ConsumerState<ShootingGame>
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.accent
-                                    .withOpacity(0.3 + _highlightController.value * 0.3),
+                                color: AppColors.accent.withValues(
+                                    alpha:
+                                        0.3 + _highlightController.value * 0.3),
                                 blurRadius: 12,
                                 spreadRadius: 2,
                               ),
@@ -351,7 +358,7 @@ class _ShootingGameState extends ConsumerState<ShootingGame>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -382,7 +389,7 @@ class _ShootingGameState extends ConsumerState<ShootingGame>
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, -4),
           ),
@@ -391,8 +398,8 @@ class _ShootingGameState extends ConsumerState<ShootingGame>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+          const Padding(
+            padding: EdgeInsets.only(bottom: 12),
             child: Text(
               '选择正确释义',
               style: TextStyle(
@@ -437,7 +444,7 @@ class _ShootingGameState extends ConsumerState<ShootingGame>
                       : isWrong
                           ? AppColors.error
                           : AppColors.primary)
-                  .withOpacity(0.3),
+                  .withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -522,7 +529,7 @@ class _ShootingGameState extends ConsumerState<ShootingGame>
                 height: 80,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.success.withOpacity(0.3),
+                  color: AppColors.success.withValues(alpha: 0.3),
                 ),
                 child: const Icon(
                   Icons.check_circle,
@@ -544,8 +551,11 @@ class _ShootingGameState extends ConsumerState<ShootingGame>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.military_tech,
-                size: 64, color: AppColors.accent),
+            const Icon(
+              Icons.military_tech,
+              size: 64,
+              color: AppColors.accent,
+            ),
             const SizedBox(height: 16),
             Text(
               _lives <= 0 ? '生命耗尽！' : '射击完成！',

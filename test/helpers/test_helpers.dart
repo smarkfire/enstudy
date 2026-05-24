@@ -78,9 +78,19 @@ OcrResult createTestOcrResult({
         [
           const OcrWord(text: 'The', left: 0, top: 0, width: 30, height: 20),
           const OcrWord(
-              text: 'quick', left: 35, top: 0, width: 40, height: 20),
+            text: 'quick',
+            left: 35,
+            top: 0,
+            width: 40,
+            height: 20,
+          ),
           const OcrWord(
-              text: 'brown', left: 80, top: 0, width: 45, height: 20),
+            text: 'brown',
+            left: 80,
+            top: 0,
+            width: 45,
+            height: 20,
+          ),
           const OcrWord(text: 'fox', left: 130, top: 0, width: 30, height: 20),
         ],
     markedContents: markedContents ?? [],

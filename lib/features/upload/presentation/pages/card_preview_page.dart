@@ -74,8 +74,13 @@ class CardPreviewPage extends ConsumerWidget {
                         onToggle: () => ref
                             .read(uploadProvider.notifier)
                             .toggleCardSelection(cardId),
-                        onEdit: (content, translation, phonetic, example,
-                            exampleTranslation) {
+                        onEdit: (
+                          content,
+                          translation,
+                          phonetic,
+                          example,
+                          exampleTranslation,
+                        ) {
                           ref.read(uploadProvider.notifier).editCard(
                                 cardId,
                                 content: content,
@@ -115,8 +120,13 @@ class CardPreviewPage extends ConsumerWidget {
                         onToggle: () => ref
                             .read(uploadProvider.notifier)
                             .toggleCardSelection(cardId),
-                        onEdit: (content, translation, phonetic, example,
-                            exampleTranslation) {
+                        onEdit: (
+                          content,
+                          translation,
+                          phonetic,
+                          example,
+                          exampleTranslation,
+                        ) {
                           ref.read(uploadProvider.notifier).editCard(
                                 cardId,
                                 content: content,
@@ -147,7 +157,7 @@ class CardPreviewPage extends ConsumerWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.grey[100],
-        border: Border(
+        border: const Border(
           bottom: BorderSide(color: AppColors.divider),
         ),
       ),
@@ -156,8 +166,8 @@ class CardPreviewPage extends ConsumerWidget {
           : Image.asset(
               imagePath,
               fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) =>
-                  const Center(child: Icon(Icons.image, size: 64, color: Colors.grey)),
+              errorBuilder: (_, __, ___) => const Center(
+                  child: Icon(Icons.image, size: 64, color: Colors.grey)),
             ),
     );
   }
@@ -183,7 +193,7 @@ class CardPreviewPage extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
@@ -198,14 +208,15 @@ class CardPreviewPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildBottomBar(BuildContext context, WidgetRef ref, int selectedCount) {
+  Widget _buildBottomBar(
+      BuildContext context, WidgetRef ref, int selectedCount) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -213,9 +224,7 @@ class CardPreviewPage extends ConsumerWidget {
       ),
       child: SafeArea(
         child: ElevatedButton(
-          onPressed: selectedCount > 0
-              ? () => _saveCards(context, ref)
-              : null,
+          onPressed: selectedCount > 0 ? () => _saveCards(context, ref) : null,
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
@@ -232,7 +241,8 @@ class CardPreviewPage extends ConsumerWidget {
   }
 
   Future<void> _saveCards(BuildContext context, WidgetRef ref) async {
-    final savedCount = await ref.read(uploadProvider.notifier).saveSelectedCards();
+    final savedCount =
+        await ref.read(uploadProvider.notifier).saveSelectedCards();
 
     if (!context.mounted) return;
 
@@ -259,7 +269,8 @@ class CardPreviewPage extends ConsumerWidget {
                 color: AppColors.success.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.check_circle, color: AppColors.success, size: 40),
+              child: const Icon(Icons.check_circle,
+                  color: AppColors.success, size: 40),
             ),
             const SizedBox(height: 16),
             Text(
@@ -320,7 +331,7 @@ class CardPreviewPage extends ConsumerWidget {
               const SizedBox(height: 4),
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(),
-                child: Text(
+                child: const Text(
                   '留在当前页',
                   style: TextStyle(color: AppColors.textHint),
                 ),
@@ -347,7 +358,8 @@ class CardPreviewPage extends ConsumerWidget {
                 color: AppColors.error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.error_outline, color: AppColors.error, size: 40),
+              child: const Icon(Icons.error_outline,
+                  color: AppColors.error, size: 40),
             ),
             const SizedBox(height: 16),
             Text(

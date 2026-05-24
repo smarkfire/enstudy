@@ -13,12 +13,10 @@ import 'package:enstudy/core/database/daos/source_dao.dart';
 import 'package:enstudy/core/database/database_setup.dart';
 import 'package:enstudy/core/network/cors_proxy_interceptor.dart';
 import 'package:enstudy/core/utils/image_compressor.dart';
+import 'package:enstudy/features/auth/presentation/providers/auth_provider.dart';
 import 'package:enstudy/features/cards/data/models/card_model.dart';
 import 'package:enstudy/features/cards/domain/entities/card.dart' as domain;
-import 'package:enstudy/features/upload/data/datasources/ai_analysis_service.dart';
-import 'package:enstudy/features/upload/data/datasources/mark_detector_service.dart';
-import 'package:enstudy/features/upload/data/datasources/mark_matcher.dart';
-import 'package:enstudy/features/upload/data/datasources/ocr_service.dart';
+import 'package:enstudy/features/upload/data/datasources/qwen_vl_service.dart';
 import 'package:enstudy/features/upload/data/models/upload_result.dart';
 import 'package:enstudy/features/upload/domain/entities/ocr_result.dart';
 
@@ -26,7 +24,6 @@ enum UploadStatus {
   idle,
   pickingImage,
   compressing,
-  recognizing,
   readyToAnalyze,
   analyzing,
   previewing,
@@ -38,9 +35,7 @@ class UploadState {
   final UploadStatus status;
   final String? errorMessage;
   final String? imagePath;
-  final List<int>? compressedBytes;
-  final OcrResult? ocrResult;
-  final MatchResult? matchResult;
+  final List<int>? imageBytes;
   final UploadResult? uploadResult;
   final Set<String> selectedCardIds;
 
@@ -48,9 +43,7 @@ class UploadState {
     this.status = UploadStatus.idle,
     this.errorMessage,
     this.imagePath,
-    this.compressedBytes,
-    this.ocrResult,
-    this.matchResult,
+    this.imageBytes,
     this.uploadResult,
     this.selectedCardIds = const {},
   });
@@ -59,9 +52,7 @@ class UploadState {
     UploadStatus? status,
     String? errorMessage,
     String? imagePath,
-    List<int>? compressedBytes,
-    OcrResult? ocrResult,
-    MatchResult? matchResult,
+    List<int>? imageBytes,
     UploadResult? uploadResult,
     Set<String>? selectedCardIds,
   }) =>
@@ -69,9 +60,7 @@ class UploadState {
         status: status ?? this.status,
         errorMessage: errorMessage,
         imagePath: imagePath ?? this.imagePath,
-        compressedBytes: compressedBytes ?? this.compressedBytes,
-        ocrResult: ocrResult ?? this.ocrResult,
-        matchResult: matchResult ?? this.matchResult,
+        imageBytes: imageBytes ?? this.imageBytes,
         uploadResult: uploadResult ?? this.uploadResult,
         selectedCardIds: selectedCardIds ?? this.selectedCardIds,
       );
@@ -100,39 +89,23 @@ final dioProvider = Provider<Dio>((ref) {
   return dio;
 });
 
-final ocrServiceProvider = Provider<BaiduOcrService>((ref) {
-  return BaiduOcrService(ref.watch(dioProvider));
-});
-
-final aiServiceProvider = Provider<DeepSeekAiService>((ref) {
-  return DeepSeekAiService(ref.watch(dioProvider));
-});
-
-final markDetectorServiceProvider = Provider<MarkDetectorService>((ref) {
-  return MarkDetectorService();
-});
-
-final markMatcherProvider = Provider<MarkMatcher>((ref) {
-  return MarkMatcher();
+final qwenVlServiceProvider = Provider<QwenVlService>((ref) {
+  return QwenVlService(ref.watch(dioProvider));
 });
 
 final uploadProvider =
     StateNotifierProvider<UploadNotifier, UploadState>((ref) {
   return UploadNotifier(
-    ocrService: ref.watch(ocrServiceProvider),
-    aiService: ref.watch(aiServiceProvider),
-    markDetectorService: ref.watch(markDetectorServiceProvider),
-    markMatcher: ref.watch(markMatcherProvider),
+    ref: ref,
+    qwenVlService: ref.watch(qwenVlServiceProvider),
     cardDao: ref.watch(cardDaoProvider),
     sourceDao: ref.watch(sourceDaoProvider),
   );
 });
 
 class UploadNotifier extends StateNotifier<UploadState> {
-  final BaiduOcrService _ocrService;
-  final DeepSeekAiService _aiService;
-  final MarkDetectorService _markDetectorService;
-  final MarkMatcher _markMatcher;
+  final Ref _ref;
+  final QwenVlService _qwenVlService;
   final CardDao _cardDao;
   final SourceDao _sourceDao;
   final ImagePicker _imagePicker = ImagePicker();
@@ -140,38 +113,19 @@ class UploadNotifier extends StateNotifier<UploadState> {
   final _secureStorage = const FlutterSecureStorage();
 
   UploadNotifier({
-    required BaiduOcrService ocrService,
-    required DeepSeekAiService aiService,
-    required MarkDetectorService markDetectorService,
-    required MarkMatcher markMatcher,
+    required Ref ref,
+    required QwenVlService qwenVlService,
     required CardDao cardDao,
     required SourceDao sourceDao,
-  })  : _ocrService = ocrService,
-        _aiService = aiService,
-        _markDetectorService = markDetectorService,
-        _markMatcher = markMatcher,
+  })  : _ref = ref,
+        _qwenVlService = qwenVlService,
         _cardDao = cardDao,
         _sourceDao = sourceDao,
         super(const UploadState());
 
-  Future<String> _getBaiduApiKey() async {
-    final stored = await _secureStorage.read(key: 'baidu_ocr_api_key');
-    return stored?.isNotEmpty == true ? stored! : ApiConfig.baiduOcrApiKey;
-  }
-
-  Future<String> _getBaiduSecretKey() async {
-    final stored = await _secureStorage.read(key: 'baidu_ocr_secret_key');
-    return stored?.isNotEmpty == true ? stored! : ApiConfig.baiduOcrSecretKey;
-  }
-
-  Future<String> _getDeepSeekApiKey() async {
-    final stored = await _secureStorage.read(key: 'deepseek_api_key');
-    return stored?.isNotEmpty == true ? stored! : ApiConfig.deepseekApiKey;
-  }
-
-  Future<String> _getCorsProxyUrl() async {
-    final stored = await _secureStorage.read(key: 'cors_proxy_url');
-    return stored?.isNotEmpty == true ? stored! : ApiConfig.corsProxyUrl;
+  Future<String> _getQwenApiKey() async {
+    final stored = await _secureStorage.read(key: 'qwen_api_key');
+    return stored?.isNotEmpty == true ? stored! : ApiConfig.qwenApiKey;
   }
 
   String _formatDioError(DioException e, String context) {
@@ -190,7 +144,7 @@ class UploadNotifier extends StateNotifier<UploadState> {
     return '$context失败：${e.message ?? e.type.name}';
   }
 
-  Future<void> pickAndRecognizeImage() async {
+  Future<void> pickImage() async {
     try {
       state = state.copyWith(status: UploadStatus.pickingImage);
 
@@ -212,9 +166,9 @@ class UploadNotifier extends StateNotifier<UploadState> {
         imagePath: imagePath,
       );
 
-      List<int> compressedBytes;
+      List<int> imageBytes;
       if (kIsWeb) {
-        compressedBytes = await pickedFile.readAsBytes();
+        imageBytes = await pickedFile.readAsBytes();
       } else {
         final compressedFile = await ImageCompressor.compressToFile(
           sourcePath: imagePath,
@@ -222,10 +176,10 @@ class UploadNotifier extends StateNotifier<UploadState> {
           maxHeight: 1080,
           quality: 80,
         );
-        compressedBytes = await compressedFile.readAsBytes();
+        imageBytes = await compressedFile.readAsBytes();
       }
 
-      if (compressedBytes.isEmpty) {
+      if (imageBytes.isEmpty) {
         state = state.copyWith(
           status: UploadStatus.error,
           errorMessage: '图片读取失败，请重新选择',
@@ -233,57 +187,9 @@ class UploadNotifier extends StateNotifier<UploadState> {
         return;
       }
 
-      final baiduApiKey = await _getBaiduApiKey();
-      final baiduSecretKey = await _getBaiduSecretKey();
-
-      state = state.copyWith(status: UploadStatus.recognizing);
-
-      OcrResult ocrResult;
-      try {
-        final accessToken = await _ocrService.getAccessToken(
-          baiduApiKey,
-          baiduSecretKey,
-        );
-        ocrResult = await _ocrService.recognizeText(
-          compressedBytes,
-          accessToken,
-        );
-      } on DioException catch (e) {
-        final msg = _formatDioError(e, 'OCR识别');
-        state = state.copyWith(
-          status: UploadStatus.error,
-          errorMessage: msg,
-        );
-        return;
-      } catch (e) {
-        state = state.copyWith(
-          status: UploadStatus.error,
-          errorMessage: 'OCR识别失败：$e',
-        );
-        return;
-      }
-
-      if (ocrResult.words.isEmpty && ocrResult.text.isEmpty) {
-        state = state.copyWith(
-          status: UploadStatus.error,
-          errorMessage: '未识别到文字，请确保图片包含英文内容',
-        );
-        return;
-      }
-
-      List<MarkRegion> markRegions = [];
-      if (!kIsWeb) {
-        try {
-          markRegions = await _markDetectorService.detectMarks(compressedBytes);
-        } catch (_) {}
-      }
-      final matchResult = _markMatcher.match(ocrResult, markRegions);
-
       state = state.copyWith(
         status: UploadStatus.readyToAnalyze,
-        compressedBytes: compressedBytes,
-        ocrResult: ocrResult,
-        matchResult: matchResult,
+        imageBytes: imageBytes,
       );
     } catch (e) {
       state = state.copyWith(
@@ -294,45 +200,50 @@ class UploadNotifier extends StateNotifier<UploadState> {
   }
 
   Future<void> analyzeWithDefault() async {
-    final ocrResult = state.ocrResult;
-    final matchResult = state.matchResult;
-    if (ocrResult == null || matchResult == null) return;
+    final imageBytes = state.imageBytes;
+    if (imageBytes == null) return;
 
-    await _performAnalysis(
-      ocrText: ocrResult.text,
-      markedContents: matchResult.markedContents.map((mc) => mc.text).toList(),
-      markTypes: matchResult.markedContents.map((mc) => mc.markType).toList(),
-    );
+    await _performAnalysis(imageBytes: imageBytes);
   }
 
   Future<void> analyzeWithCustomPrompt(String userPrompt) async {
-    final ocrResult = state.ocrResult;
-    if (ocrResult == null) return;
+    final imageBytes = state.imageBytes;
+    if (imageBytes == null) return;
 
-    await _performAnalysis(
-      ocrText: ocrResult.text,
-      customPrompt: userPrompt,
-    );
+    await _performAnalysis(imageBytes: imageBytes, customPrompt: userPrompt);
   }
 
   Future<void> _performAnalysis({
-    required String ocrText,
-    List<String>? markedContents,
-    List<MarkType>? markTypes,
+    required List<int> imageBytes,
     String? customPrompt,
   }) async {
     try {
-      final deepseekApiKey = await _getDeepSeekApiKey();
+      final authState = _ref.read(authProvider);
+      if (authState.isLoggedIn && authState.aiQuota <= 0) {
+        state = state.copyWith(
+          status: UploadStatus.error,
+          errorMessage: 'AI使用次数不足，请在"我的"页面购买更多次数',
+        );
+        return;
+      }
+
+      final apiKey = await _getQwenApiKey();
+
+      if (apiKey.isEmpty) {
+        state = state.copyWith(
+          status: UploadStatus.error,
+          errorMessage: '未配置千问 API Key，请在设置页配置',
+        );
+        return;
+      }
 
       state = state.copyWith(status: UploadStatus.analyzing);
 
-      AiAnalysisResult aiAnalysisResult;
+      AiAnalysisResult aiResult;
       try {
-        aiAnalysisResult = await _aiService.analyze(
-          ocrText: ocrText,
-          markedContents: markedContents ?? [],
-          markTypes: markTypes ?? [],
-          apiKey: deepseekApiKey,
+        aiResult = await _qwenVlService.analyzeImage(
+          imageBytes: imageBytes,
+          apiKey: apiKey,
           customPrompt: customPrompt,
         );
       } on DioException catch (e) {
@@ -350,21 +261,7 @@ class UploadNotifier extends StateNotifier<UploadState> {
         return;
       }
 
-      final sourceId = _uuid.v4();
-      final uploadResult = UploadResult(
-        sourceId: sourceId,
-        ocrResult: state.ocrResult!,
-        matchResult: state.matchResult ?? const MatchResult(),
-        aiAnalysisResult: aiAnalysisResult,
-      );
-
-      final defaultSelected = <String>{};
-      for (final item in aiAnalysisResult.markedAnalysis) {
-        defaultSelected.add('marked_${item.content}');
-      }
-
-      if (aiAnalysisResult.markedAnalysis.isEmpty &&
-          aiAnalysisResult.recommendations.isEmpty) {
+      if (aiResult.markedAnalysis.isEmpty && aiResult.recommendations.isEmpty) {
         state = state.copyWith(
           status: UploadStatus.error,
           errorMessage: 'AI分析未返回有效结果，请重试',
@@ -372,11 +269,28 @@ class UploadNotifier extends StateNotifier<UploadState> {
         return;
       }
 
+      final sourceId = _uuid.v4();
+      final uploadResult = UploadResult(
+        sourceId: sourceId,
+        ocrResult: const OcrResult(text: ''),
+        matchResult: const MatchResult(),
+        aiAnalysisResult: aiResult,
+      );
+
+      final defaultSelected = <String>{};
+      for (final item in aiResult.markedAnalysis) {
+        defaultSelected.add('marked_${item.content}');
+      }
+
       state = state.copyWith(
         status: UploadStatus.previewing,
         uploadResult: uploadResult,
         selectedCardIds: defaultSelected,
       );
+
+      if (authState.isLoggedIn) {
+        await _ref.read(authProvider.notifier).consumeAiQuota();
+      }
     } catch (e) {
       state = state.copyWith(
         status: UploadStatus.error,
@@ -395,7 +309,8 @@ class UploadNotifier extends StateNotifier<UploadState> {
     state = state.copyWith(selectedCardIds: selected);
   }
 
-  void editCard(String cardId, {
+  void editCard(
+    String cardId, {
     String? content,
     String? translation,
     String? phonetic,
@@ -405,7 +320,8 @@ class UploadNotifier extends StateNotifier<UploadState> {
     final result = state.uploadResult;
     if (result == null) return;
 
-    final newMarkedAnalysis = result.aiAnalysisResult.markedAnalysis.map((item) {
+    final newMarkedAnalysis =
+        result.aiAnalysisResult.markedAnalysis.map((item) {
       if ('marked_${item.content}' == cardId) {
         return item.copyWith(
           content: content ?? item.content,
@@ -418,7 +334,8 @@ class UploadNotifier extends StateNotifier<UploadState> {
       return item;
     }).toList();
 
-    final newRecommendations = result.aiAnalysisResult.recommendations.map((item) {
+    final newRecommendations =
+        result.aiAnalysisResult.recommendations.map((item) {
       if ('rec_${item.content}' == cardId) {
         return item.copyWith(
           content: content ?? item.content,
@@ -450,11 +367,13 @@ class UploadNotifier extends StateNotifier<UploadState> {
       final result = state.uploadResult!;
       final selectedIds = state.selectedCardIds;
 
-      await _sourceDao.insertSource(SourcesCompanion(
-        id: Value(result.sourceId),
-        imagePath: Value(state.imagePath ?? ''),
-        createdAt: Value(DateTime.now().millisecondsSinceEpoch),
-      ));
+      await _sourceDao.insertSource(
+        SourcesCompanion(
+          id: Value(result.sourceId),
+          imagePath: Value(state.imagePath ?? ''),
+          createdAt: Value(DateTime.now().millisecondsSinceEpoch),
+        ),
+      );
 
       final cardsToSave = <domain.Card>[];
       final now = DateTime.now();
@@ -462,36 +381,40 @@ class UploadNotifier extends StateNotifier<UploadState> {
       for (final item in result.aiAnalysisResult.markedAnalysis) {
         final id = 'marked_${item.content}';
         if (selectedIds.contains(id)) {
-          cardsToSave.add(domain.Card(
-            id: _uuid.v4(),
-            type: 'word',
-            content: item.content,
-            translation: item.translation,
-            phonetic: item.phonetic,
-            example: item.example,
-            exampleTranslation: item.exampleTranslation,
-            sourceId: result.sourceId,
-            createdAt: now,
-            nextReview: now,
-          ));
+          cardsToSave.add(
+            domain.Card(
+              id: _uuid.v4(),
+              type: 'word',
+              content: item.content,
+              translation: item.translation,
+              phonetic: item.phonetic,
+              example: item.example,
+              exampleTranslation: item.exampleTranslation,
+              sourceId: result.sourceId,
+              createdAt: now,
+              nextReview: now,
+            ),
+          );
         }
       }
 
       for (final item in result.aiAnalysisResult.recommendations) {
         final id = 'rec_${item.content}';
         if (selectedIds.contains(id)) {
-          cardsToSave.add(domain.Card(
-            id: _uuid.v4(),
-            type: item.type,
-            content: item.content,
-            translation: item.translation,
-            phonetic: item.phonetic,
-            example: item.example,
-            exampleTranslation: item.exampleTranslation,
-            sourceId: result.sourceId,
-            createdAt: now,
-            nextReview: now,
-          ));
+          cardsToSave.add(
+            domain.Card(
+              id: _uuid.v4(),
+              type: item.type,
+              content: item.content,
+              translation: item.translation,
+              phonetic: item.phonetic,
+              example: item.example,
+              exampleTranslation: item.exampleTranslation,
+              sourceId: result.sourceId,
+              createdAt: now,
+              nextReview: now,
+            ),
+          );
         }
       }
 

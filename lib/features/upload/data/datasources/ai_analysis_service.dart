@@ -8,8 +8,7 @@ class DeepSeekAiService {
 
   DeepSeekAiService(this._dio);
 
-  static const String _baseUrl =
-      'https://api.deepseek.com/v1/chat/completions';
+  static const String _baseUrl = 'https://api.deepseek.com/v1/chat/completions';
 
   Future<AiAnalysisResult> analyze({
     required String ocrText,
@@ -55,7 +54,9 @@ class DeepSeekAiService {
   ) {
     final markedText = markedContents.asMap().entries.map((entry) {
       final typeStr = _markTypeToString(
-        entry.key < markTypes.length ? markTypes[entry.key] : MarkType.highlight,
+        entry.key < markTypes.length
+            ? markTypes[entry.key]
+            : MarkType.highlight,
       );
       return '${entry.value}($typeStr)';
     }).join('、');
@@ -146,27 +147,31 @@ $userPrompt
       final markedAnalysis = <MarkedAnalysisItem>[];
       final markedList = json['marked_analysis'] as List<dynamic>? ?? [];
       for (final item in markedList) {
-        markedAnalysis.add(MarkedAnalysisItem(
-          content: item['content'] as String? ?? '',
-          translation: item['translation'] as String? ?? '',
-          phonetic: item['phonetic'] as String? ?? '',
-          example: item['example'] as String? ?? '',
-          exampleTranslation: item['example_translation'] as String? ?? '',
-        ));
+        markedAnalysis.add(
+          MarkedAnalysisItem(
+            content: item['content'] as String? ?? '',
+            translation: item['translation'] as String? ?? '',
+            phonetic: item['phonetic'] as String? ?? '',
+            example: item['example'] as String? ?? '',
+            exampleTranslation: item['example_translation'] as String? ?? '',
+          ),
+        );
       }
 
       final recommendations = <RecommendationItem>[];
       final recList = json['recommendations'] as List<dynamic>? ?? [];
       for (final item in recList) {
-        recommendations.add(RecommendationItem(
-          content: item['content'] as String? ?? '',
-          translation: item['translation'] as String? ?? '',
-          phonetic: item['phonetic'] as String? ?? '',
-          example: item['example'] as String? ?? '',
-          exampleTranslation: item['example_translation'] as String? ?? '',
-          type: item['type'] as String? ?? 'word',
-          reason: item['reason'] as String? ?? '',
-        ));
+        recommendations.add(
+          RecommendationItem(
+            content: item['content'] as String? ?? '',
+            translation: item['translation'] as String? ?? '',
+            phonetic: item['phonetic'] as String? ?? '',
+            example: item['example'] as String? ?? '',
+            exampleTranslation: item['example_translation'] as String? ?? '',
+            type: item['type'] as String? ?? 'word',
+            reason: item['reason'] as String? ?? '',
+          ),
+        );
       }
 
       return AiAnalysisResult(

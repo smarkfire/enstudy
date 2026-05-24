@@ -80,29 +80,41 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
           children: [
             Row(
               children: [
-                Icon(Icons.upload_file_outlined, color: AppColors.primary, size: 22),
+                const Icon(Icons.upload_file_outlined,
+                    color: AppColors.primary, size: 22),
                 const SizedBox(width: 8),
-                Text('导出数据', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Text('导出数据',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 16),
-            _buildCheckboxTile('卡片数据', _exportCards, (v) => setState(() => _exportCards = v)),
-            _buildCheckboxTile('复习记录', _exportReviewLogs, (v) => setState(() => _exportReviewLogs = v)),
-            _buildCheckboxTile('游戏记录', _exportGameSessions, (v) => setState(() => _exportGameSessions = v)),
-            _buildCheckboxTile('个人设置', _exportProfile, (v) => setState(() => _exportProfile = v)),
+            _buildCheckboxTile(
+                '卡片数据', _exportCards, (v) => setState(() => _exportCards = v)),
+            _buildCheckboxTile('复习记录', _exportReviewLogs,
+                (v) => setState(() => _exportReviewLogs = v)),
+            _buildCheckboxTile('游戏记录', _exportGameSessions,
+                (v) => setState(() => _exportGameSessions = v)),
+            _buildCheckboxTile('个人设置', _exportProfile,
+                (v) => setState(() => _exportProfile = v)),
             const Divider(height: 24),
             SwitchListTile(
               dense: true,
               title: const Text('包含图片', style: TextStyle(fontSize: 14)),
-              subtitle: Text('导出图片会增加文件大小', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              subtitle: const Text('导出图片会增加文件大小',
+                  style:
+                      TextStyle(fontSize: 12, color: AppColors.textSecondary)),
               value: _includeImages,
-              activeColor: AppColors.primary,
+              activeThumbColor: AppColors.primary,
               onChanged: (v) => setState(() => _includeImages = v),
             ),
             const SizedBox(height: 8),
             Text(
               '预计大小：${_estimateSize()}',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style:
+                  const TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 12),
             SizedBox(
@@ -114,7 +126,8 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
                       )
                     : const Icon(Icons.share_outlined, size: 18),
                 label: Text(_isExporting ? '导出中...' : '导出并分享'),
@@ -135,9 +148,14 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
           children: [
             Row(
               children: [
-                Icon(Icons.download_outlined, color: AppColors.primary, size: 22),
+                const Icon(Icons.download_outlined,
+                    color: AppColors.primary, size: 22),
                 const SizedBox(width: 8),
-                Text('导入数据', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Text('导入数据',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 16),
@@ -159,35 +177,50 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.06),
+                  color: AppColors.primary.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('导入预览', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primary)),
+                    const Text('导入预览',
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary)),
                     const SizedBox(height: 8),
                     _buildPreviewRow('卡片', '${_importPreview!.cardCount} 条'),
                     _buildPreviewRow('来源', '${_importPreview!.sourceCount} 条'),
-                    _buildPreviewRow('复习记录', '${_importPreview!.reviewLogCount} 条'),
-                    _buildPreviewRow('游戏记录', '${_importPreview!.gameSessionCount} 条'),
+                    _buildPreviewRow(
+                        '复习记录', '${_importPreview!.reviewLogCount} 条'),
+                    _buildPreviewRow(
+                        '游戏记录', '${_importPreview!.gameSessionCount} 条'),
                     _buildPreviewRow('版本', _importPreview!.version),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
-              Text('冲突处理策略', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+              const Text('冲突处理策略',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary)),
               const SizedBox(height: 8),
-              ...ConflictStrategy.values.map((strategy) => RadioListTile<ConflictStrategy>(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(_getStrategyLabel(strategy), style: const TextStyle(fontSize: 13)),
-                    subtitle: Text(_getStrategyDesc(strategy), style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                    value: strategy,
-                    groupValue: _conflictStrategy,
-                    activeColor: AppColors.primary,
-                    onChanged: (v) => setState(() => _conflictStrategy = v!),
-                  )),
+              ...ConflictStrategy.values.map(
+                (strategy) => RadioListTile<ConflictStrategy>(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(_getStrategyLabel(strategy),
+                      style: const TextStyle(fontSize: 13)),
+                  subtitle: Text(_getStrategyDesc(strategy),
+                      style: const TextStyle(
+                          fontSize: 11, color: AppColors.textSecondary)),
+                  value: strategy,
+                  groupValue: _conflictStrategy,
+                  activeColor: AppColors.primary,
+                  onChanged: (v) => setState(() => _conflictStrategy = v!),
+                ),
+              ),
               const SizedBox(height: 8),
               SizedBox(
                 width: double.infinity,
@@ -198,7 +231,8 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
                         )
                       : const Icon(Icons.download_done_outlined, size: 18),
                   label: Text(_isImporting ? '导入中...' : '确认导入'),
@@ -220,18 +254,24 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
           children: [
             Row(
               children: [
-                Icon(Icons.history_outlined, color: AppColors.primary, size: 22),
+                const Icon(Icons.history_outlined,
+                    color: AppColors.primary, size: 22),
                 const SizedBox(width: 8),
-                Text('最近备份', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Text('最近备份',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 12),
-            Center(
+            const Center(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16),
                 child: Text(
                   '暂无备份记录',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  style:
+                      TextStyle(color: AppColors.textSecondary, fontSize: 13),
                 ),
               ),
             ),
@@ -242,12 +282,12 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
   }
 
   Widget _buildBottomTip() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [
           Icon(Icons.info_outline, size: 16, color: AppColors.textHint),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           Expanded(
             child: Text(
               '导入将合并数据，不会删除已有内容',
@@ -259,7 +299,8 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
     );
   }
 
-  Widget _buildCheckboxTile(String title, bool value, ValueChanged<bool> onChanged) {
+  Widget _buildCheckboxTile(
+      String title, bool value, ValueChanged<bool> onChanged) {
     return CheckboxListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
@@ -277,8 +318,12 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-          Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 12, color: AppColors.textSecondary)),
+          Text(value,
+              style:
+                  const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -307,7 +352,10 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
   }
 
   bool _canExport() {
-    return _exportCards || _exportReviewLogs || _exportGameSessions || _exportProfile;
+    return _exportCards ||
+        _exportReviewLogs ||
+        _exportGameSessions ||
+        _exportProfile;
   }
 
   String _estimateSize() {
@@ -364,7 +412,8 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('读取文件失败：$e'), backgroundColor: AppColors.error),
+          SnackBar(
+              content: Text('读取文件失败：$e'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -383,7 +432,8 @@ class _DataManagementPageState extends ConsumerState<DataManagementPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('导入完成：${result.imported}条导入，${result.skipped}条跳过，${result.conflicted}条冲突'),
+            content: Text(
+                '导入完成：${result.imported}条导入，${result.skipped}条跳过，${result.conflicted}条冲突'),
             backgroundColor: AppColors.success,
           ),
         );

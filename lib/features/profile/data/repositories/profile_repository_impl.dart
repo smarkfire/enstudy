@@ -25,5 +25,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<void> updateStreak(int streakDays, DateTime lastCheckin) =>
       _userProfileDao.updateStreak(
-          streakDays, lastCheckin.millisecondsSinceEpoch);
+        streakDays,
+        lastCheckin.millisecondsSinceEpoch,
+      );
 }

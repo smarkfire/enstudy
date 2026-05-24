@@ -98,7 +98,7 @@ class _SpellGameState extends ConsumerState<SpellGame> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -119,7 +119,7 @@ class _SpellGameState extends ConsumerState<SpellGame> {
                   const SizedBox(height: 8),
                   Text(
                     card.phonetic!,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       color: AppColors.textSecondary,
                     ),
@@ -134,14 +134,15 @@ class _SpellGameState extends ConsumerState<SpellGame> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.1),
+                color: AppColors.success.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.success, width: 2),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.check_circle, color: AppColors.success, size: 28),
+                  const Icon(Icons.check_circle,
+                      color: AppColors.success, size: 28),
                   const SizedBox(width: 8),
                   Text(
                     card.content,
@@ -159,7 +160,7 @@ class _SpellGameState extends ConsumerState<SpellGame> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.error.withOpacity(0.1),
+                color: AppColors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.error, width: 2),
               ),
@@ -168,7 +169,8 @@ class _SpellGameState extends ConsumerState<SpellGame> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.cancel, color: AppColors.error, size: 28),
+                      const Icon(Icons.cancel,
+                          color: AppColors.error, size: 28),
                       const SizedBox(width: 8),
                       Text(
                         '你的答案: $_userInput',
@@ -204,20 +206,21 @@ class _SpellGameState extends ConsumerState<SpellGame> {
               ),
               decoration: InputDecoration(
                 hintText: '输入英文单词',
-                hintStyle: TextStyle(color: AppColors.textHint),
+                hintStyle: const TextStyle(color: AppColors.textHint),
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppColors.divider),
+                  borderSide: const BorderSide(color: AppColors.divider),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppColors.divider),
+                  borderSide: const BorderSide(color: AppColors.divider),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                  borderSide:
+                      const BorderSide(color: AppColors.primary, width: 2),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -250,7 +253,7 @@ class _SpellGameState extends ConsumerState<SpellGame> {
           const SizedBox(height: 16),
           Text(
             '${_currentIndex + 1} / ${_cards.length}',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               color: AppColors.textSecondary,
             ),

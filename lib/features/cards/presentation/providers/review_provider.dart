@@ -45,13 +45,11 @@ class ReviewState {
     );
   }
 
-  Card? get currentCard =>
-      dueCards.isNotEmpty && currentIndex < dueCards.length
-          ? dueCards[currentIndex]
-          : null;
+  Card? get currentCard => dueCards.isNotEmpty && currentIndex < dueCards.length
+      ? dueCards[currentIndex]
+      : null;
 
-  double get accuracy =>
-      totalReviewed > 0 ? correctCount / totalReviewed : 0.0;
+  double get accuracy => totalReviewed > 0 ? correctCount / totalReviewed : 0.0;
 }
 
 class ReviewNotifier extends StateNotifier<ReviewState> {
@@ -60,7 +58,8 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
   final Sm2Algorithm _sm2 = Sm2Algorithm();
   final _uuid = const Uuid();
 
-  ReviewNotifier(this._cardDao, this._reviewLogDao) : super(const ReviewState());
+  ReviewNotifier(this._cardDao, this._reviewLogDao)
+      : super(const ReviewState());
 
   Future<void> getDueCards() async {
     final cards = await _cardDao
@@ -110,13 +109,15 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
 
     await _cardDao.updateCard(updatedCard.toRow());
 
-    await _reviewLogDao.insertLog(ReviewLogsCompanion(
-      id: Value(_uuid.v4()),
-      cardId: Value(cardId),
-      quality: Value(quality),
-      answeredAt: Value(now.millisecondsSinceEpoch),
-      gameType: Value(gameType),
-    ));
+    await _reviewLogDao.insertLog(
+      ReviewLogsCompanion(
+        id: Value(_uuid.v4()),
+        cardId: Value(cardId),
+        quality: Value(quality),
+        answeredAt: Value(now.millisecondsSinceEpoch),
+        gameType: Value(gameType),
+      ),
+    );
 
     final newTotal = state.totalReviewed + 1;
     final newCorrect = state.correctCount + (isCorrect ? 1 : 0);

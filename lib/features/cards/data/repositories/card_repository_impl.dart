@@ -1,4 +1,3 @@
-import 'package:enstudy/core/database/app_database.dart';
 import 'package:enstudy/core/database/daos/card_dao.dart';
 import 'package:enstudy/features/cards/data/models/card_model.dart';
 import 'package:enstudy/features/cards/domain/entities/card.dart';
@@ -10,8 +9,9 @@ class CardRepositoryImpl implements CardRepository {
   CardRepositoryImpl(this._cardDao);
 
   @override
-  Stream<List<Card>> getCards() =>
-      _cardDao.getAllCards().map((rows) => rows.map((r) => r.toEntity()).toList());
+  Stream<List<Card>> getCards() => _cardDao
+      .getAllCards()
+      .map((rows) => rows.map((r) => r.toEntity()).toList());
 
   @override
   Future<Card?> getCardById(String id) async {
@@ -20,8 +20,9 @@ class CardRepositoryImpl implements CardRepository {
   }
 
   @override
-  Stream<List<Card>> getCardsByStatus(String status) =>
-      _cardDao.getCardsByStatus(status).map((rows) => rows.map((r) => r.toEntity()).toList());
+  Stream<List<Card>> getCardsByStatus(String status) => _cardDao
+      .getCardsByStatus(status)
+      .map((rows) => rows.map((r) => r.toEntity()).toList());
 
   @override
   Stream<List<Card>> getCardsDueForReview() => _cardDao
@@ -29,8 +30,7 @@ class CardRepositoryImpl implements CardRepository {
       .map((rows) => rows.map((r) => r.toEntity()).toList());
 
   @override
-  Future<void> addCard(Card card) =>
-      _cardDao.insertCard(card.toCompanion());
+  Future<void> addCard(Card card) => _cardDao.insertCard(card.toCompanion());
 
   @override
   Future<void> addCards(List<Card> cards) =>
@@ -43,8 +43,9 @@ class CardRepositoryImpl implements CardRepository {
   Future<void> deleteCard(String id) => _cardDao.deleteCard(id);
 
   @override
-  Stream<List<Card>> searchCards(String query) =>
-      _cardDao.searchCards(query).map((rows) => rows.map((r) => r.toEntity()).toList());
+  Stream<List<Card>> searchCards(String query) => _cardDao
+      .searchCards(query)
+      .map((rows) => rows.map((r) => r.toEntity()).toList());
 
   @override
   Future<Map<String, int>> getCardCountByStatus() =>

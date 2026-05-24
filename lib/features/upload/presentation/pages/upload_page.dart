@@ -47,9 +47,7 @@ class _UploadPageState extends ConsumerState<UploadPage> {
               UploadArea(
                 onTap: uploadState.status == UploadStatus.idle ||
                         uploadState.status == UploadStatus.error
-                    ? () => ref
-                        .read(uploadProvider.notifier)
-                        .pickAndRecognizeImage()
+                    ? () => ref.read(uploadProvider.notifier).pickImage()
                     : null,
               ),
               if (uploadState.status == UploadStatus.error &&
@@ -59,7 +57,7 @@ class _UploadPageState extends ConsumerState<UploadPage> {
               ],
               if (uploadState.status == UploadStatus.readyToAnalyze) ...[
                 const SizedBox(height: 16),
-                _buildOcrResultCard(context, uploadState),
+                _buildImageReadyCard(context, uploadState),
                 const SizedBox(height: 16),
                 _buildAnalysisChoiceSection(context),
               ],
@@ -81,11 +79,9 @@ class _UploadPageState extends ConsumerState<UploadPage> {
       case UploadStatus.pickingImage:
         return '正在选择图片...';
       case UploadStatus.compressing:
-        return '正在压缩图片...';
-      case UploadStatus.recognizing:
-        return '正在识别文字...';
+        return '正在处理图片...';
       case UploadStatus.analyzing:
-        return '正在AI分析...';
+        return 'AI 正在分析图片...';
       case UploadStatus.saving:
         return '正在保存...';
       default:
@@ -94,6 +90,8 @@ class _UploadPageState extends ConsumerState<UploadPage> {
   }
 
   Widget _buildErrorBanner(BuildContext context, String message) {
+    final isQuotaError = message.contains('AI使用次数不足');
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -101,28 +99,47 @@ class _UploadPageState extends ConsumerState<UploadPage> {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.error_outline, color: AppColors.error, size: 20),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              message,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: AppColors.error),
-            ),
+          Row(
+            children: [
+              const Icon(Icons.error_outline, color: AppColors.error, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  message,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: AppColors.error),
+                ),
+              ),
+            ],
           ),
+          if (isQuotaError) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              height: 36,
+              child: ElevatedButton.icon(
+                onPressed: () => context.push('/profile/purchase'),
+                icon: const Icon(Icons.add_shopping_cart, size: 16),
+                label: const Text('去购买次数', style: TextStyle(fontSize: 13)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.error,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildOcrResultCard(BuildContext context, UploadState uploadState) {
-    final ocrResult = uploadState.ocrResult;
-    final wordCount = ocrResult?.words.length ?? 0;
-
+  Widget _buildImageReadyCard(BuildContext context, UploadState uploadState) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -131,49 +148,47 @@ class _UploadPageState extends ConsumerState<UploadPage> {
           children: [
             Row(
               children: [
-                Icon(Icons.check_circle, color: AppColors.success, size: 22),
+                const Icon(Icons.check_circle,
+                    color: AppColors.success, size: 22),
                 const SizedBox(width: 8),
                 Text(
-                  'OCR识别完成',
+                  '图片已就绪',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         color: AppColors.success,
                         fontWeight: FontWeight.w600,
                       ),
                 ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '$wordCount 行文字',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                ),
               ],
             ),
-            if (ocrResult != null && ocrResult.text.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Container(
-                constraints: const BoxConstraints(maxHeight: 80),
-                child: SingleChildScrollView(
-                  child: Text(
-                    ocrResult.text,
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                          height: 1.4,
-                        ),
-                  ),
-                ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
               ),
-            ],
+              child: kIsWeb
+                  ? const Center(
+                      child: Icon(Icons.image, size: 48, color: Colors.grey),
+                    )
+                  : (uploadState.imagePath != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.asset(
+                            uploadState.imagePath!,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => const Center(
+                              child: Icon(Icons.image,
+                                  size: 48, color: Colors.grey),
+                            ),
+                          ),
+                        )
+                      : const Center(
+                          child:
+                              Icon(Icons.image, size: 48, color: Colors.grey),
+                        )),
+            ),
           ],
         ),
       ),
@@ -196,7 +211,7 @@ class _UploadPageState extends ConsumerState<UploadPage> {
           icon: Icons.auto_awesome,
           iconColor: AppColors.primary,
           title: '智能识别',
-          subtitle: 'AI 自动分析文本，提取单词和短语',
+          subtitle: 'AI 自动识别标注内容和错题，提取单词和短语',
           onTap: () => ref.read(uploadProvider.notifier).analyzeWithDefault(),
         ),
         const SizedBox(height: 10),
@@ -205,7 +220,7 @@ class _UploadPageState extends ConsumerState<UploadPage> {
           icon: Icons.edit_note,
           iconColor: AppColors.accent,
           title: '自定义要求',
-          subtitle: '输入你的要求，AI 按需解析',
+          subtitle: '输入你的要求，AI 按需解析图片内容',
           onTap: () => _showCustomPromptSheet(context),
         ),
       ],
@@ -259,7 +274,8 @@ class _UploadPageState extends ConsumerState<UploadPage> {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: AppColors.textHint, size: 22),
+              const Icon(Icons.chevron_right,
+                  color: AppColors.textHint, size: 22),
             ],
           ),
         ),
@@ -301,7 +317,8 @@ class _UploadPageState extends ConsumerState<UploadPage> {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Icon(Icons.edit_note, color: AppColors.accent, size: 24),
+                  const Icon(Icons.edit_note,
+                      color: AppColors.accent, size: 24),
                   const SizedBox(width: 8),
                   Text(
                     '自定义解析要求',
@@ -313,7 +330,7 @@ class _UploadPageState extends ConsumerState<UploadPage> {
               ),
               const SizedBox(height: 4),
               Text(
-                '告诉 AI 你想如何解析这段文本',
+                '告诉 AI 你想如何解析这张图片',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -327,8 +344,9 @@ class _UploadPageState extends ConsumerState<UploadPage> {
                 minLines: 2,
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: '例如：只提取动词和形容词，每个词给出2个例句...',
-                  hintStyle: TextStyle(color: AppColors.textHint, fontSize: 14),
+                  hintText: '例如：只提取图片中划线标注的动词...',
+                  hintStyle:
+                      const TextStyle(color: AppColors.textHint, fontSize: 14),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: AppColors.divider),
@@ -339,7 +357,8 @@ class _UploadPageState extends ConsumerState<UploadPage> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+                    borderSide:
+                        const BorderSide(color: AppColors.primary, width: 1.5),
                   ),
                 ),
                 onChanged: (_) => setSheetState(() {}),
@@ -355,10 +374,13 @@ class _UploadPageState extends ConsumerState<UploadPage> {
                           Navigator.of(context).pop();
                           ref
                               .read(uploadProvider.notifier)
-                              .analyzeWithCustomPrompt(_promptController.text.trim());
+                              .analyzeWithCustomPrompt(
+                                  _promptController.text.trim());
                         },
-                  icon: Icon(Icons.send_rounded, size: 20),
-                  label: const Text('发送', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  icon: const Icon(Icons.send_rounded, size: 20),
+                  label: const Text('发送',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -375,10 +397,10 @@ class _UploadPageState extends ConsumerState<UploadPage> {
 
   Widget _buildQuickChips(BuildContext context, StateSetter setSheetState) {
     final suggestions = [
-      '只提取动词',
+      '提取划线标注的词',
+      '识别错题',
       '提取所有生词',
       '提取固定搭配',
-      '每个词2个例句',
       '按难度分级',
     ];
 
@@ -396,7 +418,7 @@ class _UploadPageState extends ConsumerState<UploadPage> {
             );
             setSheetState(() {});
           },
-          side: BorderSide(color: AppColors.divider),
+          side: const BorderSide(color: AppColors.divider),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         );
       }).toList(),
@@ -497,7 +519,7 @@ class _UploadPageState extends ConsumerState<UploadPage> {
             padding: const EdgeInsets.all(32),
             child: Column(
               children: [
-                Icon(
+                const Icon(
                   Icons.inbox_outlined,
                   size: 48,
                   color: AppColors.textHint,

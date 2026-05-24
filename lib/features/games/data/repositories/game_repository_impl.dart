@@ -19,21 +19,27 @@ class GameRepositoryImpl implements GameRepository {
     int totalQuestions = 0,
     int correctQuestions = 0,
   }) =>
-      _gameSessionDao.insertSession(GameSessionsCompanion(
-        id: Value(id),
-        gameType: Value(gameType.name),
-        startedAt: Value(startedAt.millisecondsSinceEpoch),
-        endedAt: Value(endedAt?.millisecondsSinceEpoch),
-        score: Value(score),
-        totalQuestions: Value(totalQuestions),
-        correctQuestions: Value(correctQuestions),
-      ));
+      _gameSessionDao.insertSession(
+        GameSessionsCompanion(
+          id: Value(id),
+          gameType: Value(gameType.name),
+          startedAt: Value(startedAt.millisecondsSinceEpoch),
+          endedAt: Value(endedAt?.millisecondsSinceEpoch),
+          score: Value(score),
+          totalQuestions: Value(totalQuestions),
+          correctQuestions: Value(correctQuestions),
+        ),
+      );
 
   @override
   Stream<List<Map<String, dynamic>>> getRecentSessions({int limit = 10}) =>
-      _gameSessionDao.getRecentSessions(limit: limit).map((rows) => rows.map((r) => r.toJson()).toList());
+      _gameSessionDao
+          .getRecentSessions(limit: limit)
+          .map((rows) => rows.map((r) => r.toJson()).toList());
 
   @override
   Stream<List<Map<String, dynamic>>> getSessionsByType(GameType gameType) =>
-      _gameSessionDao.getSessionsByType(gameType.name).map((rows) => rows.map((r) => r.toJson()).toList());
+      _gameSessionDao
+          .getSessionsByType(gameType.name)
+          .map((rows) => rows.map((r) => r.toJson()).toList());
 }

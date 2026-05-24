@@ -94,7 +94,8 @@ class _CardPreviewItemState extends State<CardPreviewItem> {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = widget.isRecommendation ? AppColors.accent : AppColors.primary;
+    final accentColor =
+        widget.isRecommendation ? AppColors.accent : AppColors.primary;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -102,12 +103,12 @@ class _CardPreviewItemState extends State<CardPreviewItem> {
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color: widget.isSelected
-              ? accentColor.withOpacity(0.06)
+              ? accentColor.withValues(alpha: 0.06)
               : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: widget.isSelected
-                ? accentColor.withOpacity(0.3)
+                ? accentColor.withValues(alpha: 0.3)
                 : AppColors.divider,
             width: widget.isSelected ? 1.5 : 1,
           ),
@@ -127,7 +128,7 @@ class _CardPreviewItemState extends State<CardPreviewItem> {
                     AnimatedRotation(
                       turns: _isExpanded ? 0.5 : 0,
                       duration: const Duration(milliseconds: 200),
-                      child: Icon(
+                      child: const Icon(
                         Icons.expand_more,
                         size: 20,
                         color: AppColors.textHint,
@@ -187,7 +188,7 @@ class _CardPreviewItemState extends State<CardPreviewItem> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                 decoration: BoxDecoration(
-                  color: AppColors.accent.withOpacity(0.15),
+                  color: AppColors.accent.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -236,12 +237,13 @@ class _CardPreviewItemState extends State<CardPreviewItem> {
               width: double.infinity,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.accent.withOpacity(0.08),
+                color: AppColors.accent.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.lightbulb_outline, size: 14, color: AppColors.accent),
+                  const Icon(Icons.lightbulb_outline,
+                      size: 14, color: AppColors.accent),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
@@ -279,7 +281,9 @@ class _CardPreviewItemState extends State<CardPreviewItem> {
                   onPressed: _saveEdit,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 6),
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
                   ),
                   child: const Text('保存'),
                 ),

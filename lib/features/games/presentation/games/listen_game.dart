@@ -123,7 +123,7 @@ class _ListenGameState extends ConsumerState<ListenGame> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -137,7 +137,7 @@ class _ListenGameState extends ConsumerState<ListenGame> {
             ),
           ),
           const SizedBox(height: 12),
-          Text(
+          const Text(
             '点击播放发音',
             style: TextStyle(
               fontSize: 14,
@@ -151,7 +151,7 @@ class _ListenGameState extends ConsumerState<ListenGame> {
           const SizedBox(height: 16),
           Text(
             '${_currentIndex + 1} / ${_cards.length}',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               color: AppColors.textSecondary,
             ),
@@ -173,18 +173,18 @@ class _ListenGameState extends ConsumerState<ListenGame> {
 
     if (_answered) {
       if (option.id == correctId) {
-        bgColor = AppColors.success.withOpacity(0.1);
+        bgColor = AppColors.success.withValues(alpha: 0.1);
         borderColor = AppColors.success;
         textColor = AppColors.success;
         trailingIcon = Icons.check_circle;
       } else if (isSelected && option.id != correctId) {
-        bgColor = AppColors.error.withOpacity(0.1);
+        bgColor = AppColors.error.withValues(alpha: 0.1);
         borderColor = AppColors.error;
         textColor = AppColors.error;
         trailingIcon = Icons.cancel;
       }
     } else if (isSelected) {
-      bgColor = AppColors.primary.withOpacity(0.1);
+      bgColor = AppColors.primary.withValues(alpha: 0.1);
       borderColor = AppColors.primary;
       textColor = AppColors.primary;
     }
@@ -203,7 +203,7 @@ class _ListenGameState extends ConsumerState<ListenGame> {
             border: Border.all(color: borderColor, width: 2),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.03),
+                color: Colors.black.withValues(alpha: 0.03),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -219,7 +219,7 @@ class _ListenGameState extends ConsumerState<ListenGame> {
                       ? AppColors.success
                       : _answered && isSelected && option.id != correctId
                           ? AppColors.error
-                          : AppColors.primary.withOpacity(0.1),
+                          : AppColors.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -227,7 +227,7 @@ class _ListenGameState extends ConsumerState<ListenGame> {
                       ? Icon(trailingIcon, color: Colors.white, size: 18)
                       : Text(
                           String.fromCharCode(65 + index),
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.bold,
                             fontSize: 14,

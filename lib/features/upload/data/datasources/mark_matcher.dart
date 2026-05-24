@@ -28,11 +28,13 @@ class MarkMatcher {
       }
 
       if (isMarked && markType != null) {
-        markedContents.add(MarkedContent(
-          text: word.text,
-          markType: _classifyMarkType(markType, markColor),
-          color: markColor,
-        ));
+        markedContents.add(
+          MarkedContent(
+            text: word.text,
+            markType: _classifyMarkType(markType, markColor),
+            color: markColor,
+          ),
+        );
         markedWordIndices.add(i);
       }
     }
@@ -75,8 +77,8 @@ class MarkMatcher {
       return 0.0;
     }
 
-    final intersection = (intersectRight - intersectLeft) *
-        (intersectBottom - intersectTop);
+    final intersection =
+        (intersectRight - intersectLeft) * (intersectBottom - intersectTop);
     final union = a.area + b.area - intersection;
 
     if (union <= 0) return 0.0;

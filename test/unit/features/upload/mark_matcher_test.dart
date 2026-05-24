@@ -12,14 +12,15 @@ void main() {
   group('标记匹配', () {
     group('IoU计算', () {
       test('完全重叠时IoU为1.0', () {
-        final ocrResult = OcrResult(
+        const ocrResult = OcrResult(
           text: 'abandon',
           words: [
-            const OcrWord(text: 'abandon', left: 0, top: 0, width: 100, height: 50),
+            const OcrWord(
+                text: 'abandon', left: 0, top: 0, width: 100, height: 50),
           ],
         );
         final markRegions = [
-          MarkRegion(
+          const MarkRegion(
             left: 0,
             top: 0,
             width: 100,
@@ -36,14 +37,15 @@ void main() {
       });
 
       test('无重叠时IoU为0.0', () {
-        final ocrResult = OcrResult(
+        const ocrResult = OcrResult(
           text: 'abandon',
           words: [
-            const OcrWord(text: 'abandon', left: 0, top: 0, width: 100, height: 50),
+            const OcrWord(
+                text: 'abandon', left: 0, top: 0, width: 100, height: 50),
           ],
         );
         final markRegions = [
-          MarkRegion(
+          const MarkRegion(
             left: 200,
             top: 200,
             width: 100,
@@ -60,14 +62,15 @@ void main() {
       });
 
       test('部分重叠且IoU大于阈值时匹配成功', () {
-        final ocrResult = OcrResult(
+        const ocrResult = OcrResult(
           text: 'abandon',
           words: [
-            const OcrWord(text: 'abandon', left: 0, top: 0, width: 100, height: 100),
+            const OcrWord(
+                text: 'abandon', left: 0, top: 0, width: 100, height: 100),
           ],
         );
         final markRegions = [
-          MarkRegion(
+          const MarkRegion(
             left: 50,
             top: 0,
             width: 100,
@@ -84,14 +87,15 @@ void main() {
       });
 
       test('部分重叠且IoU小于阈值时不匹配', () {
-        final ocrResult = OcrResult(
+        const ocrResult = OcrResult(
           text: 'abandon',
           words: [
-            const OcrWord(text: 'abandon', left: 0, top: 0, width: 100, height: 100),
+            const OcrWord(
+                text: 'abandon', left: 0, top: 0, width: 100, height: 100),
           ],
         );
         final markRegions = [
-          MarkRegion(
+          const MarkRegion(
             left: 80,
             top: 0,
             width: 100,
@@ -110,11 +114,12 @@ void main() {
 
     group('标记颜色分类', () {
       test('黄色标记分类为highlight', () {
-        final yellowColor = (255 << 16) | (255 << 8) | 0;
-        final ocrResult = OcrResult(
+        const yellowColor = (255 << 16) | (255 << 8) | 0;
+        const ocrResult = OcrResult(
           text: 'abandon',
           words: [
-            const OcrWord(text: 'abandon', left: 0, top: 0, width: 100, height: 50),
+            const OcrWord(
+                text: 'abandon', left: 0, top: 0, width: 100, height: 50),
           ],
         );
         final markRegions = [
@@ -134,11 +139,12 @@ void main() {
       });
 
       test('绿色标记分类为circle', () {
-        final greenColor = (0 << 16) | (200 << 8) | 0;
-        final ocrResult = OcrResult(
+        const greenColor = (0 << 16) | (200 << 8) | 0;
+        const ocrResult = OcrResult(
           text: 'ephemeral',
           words: [
-            const OcrWord(text: 'ephemeral', left: 0, top: 0, width: 100, height: 50),
+            const OcrWord(
+                text: 'ephemeral', left: 0, top: 0, width: 100, height: 50),
           ],
         );
         final markRegions = [
@@ -158,11 +164,12 @@ void main() {
       });
 
       test('粉色标记分类为underline', () {
-        final pinkColor = (255 << 16) | (0 << 8) | 200;
-        final ocrResult = OcrResult(
+        const pinkColor = (255 << 16) | (0 << 8) | 200;
+        const ocrResult = OcrResult(
           text: 'resilient',
           words: [
-            const OcrWord(text: 'resilient', left: 0, top: 0, width: 100, height: 50),
+            const OcrWord(
+                text: 'resilient', left: 0, top: 0, width: 100, height: 50),
           ],
         );
         final markRegions = [
@@ -182,11 +189,12 @@ void main() {
       });
 
       test('不匹配任何颜色条件时使用检测到的类型', () {
-        final unknownColor = (100 << 16) | (100 << 8) | 100;
-        final ocrResult = OcrResult(
+        const unknownColor = (100 << 16) | (100 << 8) | 100;
+        const ocrResult = OcrResult(
           text: 'pragmatic',
           words: [
-            const OcrWord(text: 'pragmatic', left: 0, top: 0, width: 100, height: 50),
+            const OcrWord(
+                text: 'pragmatic', left: 0, top: 0, width: 100, height: 50),
           ],
         );
         final markRegions = [
@@ -208,15 +216,20 @@ void main() {
 
     group('低于阈值的匹配被忽略', () {
       test('IoU等于0.3时不匹配', () {
-        final ocrResult = OcrResult(
+        const ocrResult = OcrResult(
           text: 'ubiquitous',
           words: [
             const OcrWord(
-                text: 'ubiquitous', left: 0, top: 0, width: 100, height: 100),
+              text: 'ubiquitous',
+              left: 0,
+              top: 0,
+              width: 100,
+              height: 100,
+            ),
           ],
         );
         final markRegions = [
-          MarkRegion(
+          const MarkRegion(
             left: 0,
             top: 0,
             width: 30,
@@ -233,15 +246,20 @@ void main() {
       });
 
       test('IoU略大于0.3时匹配', () {
-        final ocrResult = OcrResult(
+        const ocrResult = OcrResult(
           text: 'ubiquitous',
           words: [
             const OcrWord(
-                text: 'ubiquitous', left: 0, top: 0, width: 100, height: 100),
+              text: 'ubiquitous',
+              left: 0,
+              top: 0,
+              width: 100,
+              height: 100,
+            ),
           ],
         );
         final markRegions = [
-          MarkRegion(
+          const MarkRegion(
             left: 0,
             top: 0,
             width: 35,
@@ -257,15 +275,17 @@ void main() {
       });
 
       test('多个标记区域时只匹配IoU超过阈值的', () {
-        final ocrResult = OcrResult(
+        const ocrResult = OcrResult(
           text: 'quick brown',
           words: [
-            const OcrWord(text: 'quick', left: 0, top: 0, width: 50, height: 20),
-            const OcrWord(text: 'brown', left: 55, top: 0, width: 50, height: 20),
+            const OcrWord(
+                text: 'quick', left: 0, top: 0, width: 50, height: 20),
+            const OcrWord(
+                text: 'brown', left: 55, top: 0, width: 50, height: 20),
           ],
         );
         final markRegions = [
-          MarkRegion(
+          const MarkRegion(
             left: 0,
             top: 0,
             width: 50,
@@ -273,7 +293,7 @@ void main() {
             markColor: 0xFFFF00,
             markType: MarkType.highlight,
           ),
-          MarkRegion(
+          const MarkRegion(
             left: 200,
             top: 200,
             width: 50,
@@ -293,11 +313,13 @@ void main() {
 
     group('无标记区域', () {
       test('没有标记区域时所有单词都为未标记', () {
-        final ocrResult = OcrResult(
+        const ocrResult = OcrResult(
           text: 'hello world',
           words: [
-            const OcrWord(text: 'hello', left: 0, top: 0, width: 50, height: 20),
-            const OcrWord(text: 'world', left: 55, top: 0, width: 50, height: 20),
+            const OcrWord(
+                text: 'hello', left: 0, top: 0, width: 50, height: 20),
+            const OcrWord(
+                text: 'world', left: 55, top: 0, width: 50, height: 20),
           ],
         );
 

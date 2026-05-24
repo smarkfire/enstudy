@@ -134,7 +134,7 @@ class GameNotifier extends StateNotifier<GameState> {
   }
 
   void answerWrong() {
-    final penalty = GameConstants.penaltyPerWrongAnswer;
+    const penalty = GameConstants.penaltyPerWrongAnswer;
     final newWrongCards = List<domain.Card>.from(state.wrongCards);
     if (state.currentCard != null) {
       newWrongCards.add(state.currentCard!);
@@ -160,15 +160,17 @@ class GameNotifier extends StateNotifier<GameState> {
 
     if (state.gameType == null || state.startedAt == null) return;
 
-    await _gameSessionDao.insertSession(GameSessionsCompanion(
-      id: Value(_uuid.v4()),
-      gameType: Value(state.gameType!.name),
-      startedAt: Value(state.startedAt!.millisecondsSinceEpoch),
-      endedAt: Value(DateTime.now().millisecondsSinceEpoch),
-      score: Value(state.score),
-      totalQuestions: Value(state.totalQuestions),
-      correctQuestions: Value(state.correctQuestions),
-    ));
+    await _gameSessionDao.insertSession(
+      GameSessionsCompanion(
+        id: Value(_uuid.v4()),
+        gameType: Value(state.gameType!.name),
+        startedAt: Value(state.startedAt!.millisecondsSinceEpoch),
+        endedAt: Value(DateTime.now().millisecondsSinceEpoch),
+        score: Value(state.score),
+        totalQuestions: Value(state.totalQuestions),
+        correctQuestions: Value(state.correctQuestions),
+      ),
+    );
 
     for (final card in state.wrongCards) {
       final quality = mapGameResultToQuality(
@@ -215,13 +217,15 @@ class GameNotifier extends StateNotifier<GameState> {
 
     await _cardDao.updateCard(updatedCard.toRow());
 
-    await _reviewLogDao.insertLog(ReviewLogsCompanion(
-      id: Value(_uuid.v4()),
-      cardId: Value(card.id),
-      quality: Value(quality),
-      answeredAt: Value(now.millisecondsSinceEpoch),
-      gameType: Value(state.gameType?.name),
-    ));
+    await _reviewLogDao.insertLog(
+      ReviewLogsCompanion(
+        id: Value(_uuid.v4()),
+        cardId: Value(card.id),
+        quality: Value(quality),
+        answeredAt: Value(now.millisecondsSinceEpoch),
+        gameType: Value(state.gameType?.name),
+      ),
+    );
   }
 
   int mapGameResultToQuality(GameType gameType, bool isCorrect, int timeMs) {

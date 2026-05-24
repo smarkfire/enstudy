@@ -6,9 +6,10 @@ extension DateTimeExt on DateTime {
 
   String get toDateTimeString => '$toDateString $toTimeString';
 
-  String get toDisplayDate => '$year年${month}月${day}日';
+  String get toDisplayDate => '$year年$month月$day日';
 
-  String get toDisplayDateTime => '$toDisplayDate ${_twoDigits(hour)}:${_twoDigits(minute)}';
+  String get toDisplayDateTime =>
+      '$toDisplayDate ${_twoDigits(hour)}:${_twoDigits(minute)}';
 
   String get toRelativeTime {
     final now = DateTime.now();

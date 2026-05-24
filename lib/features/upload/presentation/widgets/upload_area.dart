@@ -12,14 +12,14 @@ class UploadArea extends StatelessWidget {
       onTap: onTap,
       child: CustomPaint(
         painter: _DashedBorderPainter(
-          color: AppColors.primary.withOpacity(0.4),
+          color: AppColors.primary.withValues(alpha: 0.4),
           borderRadius: 16,
         ),
         child: Container(
           height: 200,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: AppColors.primary.withOpacity(0.05),
+            color: AppColors.primary.withValues(alpha: 0.05),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -28,10 +28,10 @@ class UploadArea extends StatelessWidget {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.camera_alt_outlined,
                   size: 32,
                   color: AppColors.primary,
@@ -70,10 +70,9 @@ class _DashedBorderPainter extends CustomPainter {
   _DashedBorderPainter({
     required this.color,
     this.borderRadius = 16,
-    this.dashWidth = 8,
-    this.dashGap = 4,
-    this.strokeWidth = 2,
-  });
+  })  : dashWidth = 8,
+        dashGap = 4,
+        strokeWidth = 2;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -83,10 +82,12 @@ class _DashedBorderPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     final path = Path()
-      ..addRRect(RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        Radius.circular(borderRadius),
-      ));
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(0, 0, size.width, size.height),
+          Radius.circular(borderRadius),
+        ),
+      );
 
     _drawDashedPath(canvas, path, paint);
   }

@@ -3,7 +3,7 @@ import 'package:enstudy/features/profile/data/models/export_data.dart';
 
 void main() {
   group('导出数据模型', () {
-    final testExportData = ExportData(
+    const testExportData = ExportData(
       version: '1.0',
       exportTime: '2024-06-15T10:30:00Z',
       appVersion: '1.0.0',
@@ -46,7 +46,7 @@ void main() {
       });
 
       test('userProfile为null时不包含在JSON中', () {
-        final data = ExportData(
+        const data = ExportData(
           version: '1.0',
           exportTime: '2024-06-15T10:30:00Z',
           appVersion: '1.0.0',
@@ -62,7 +62,7 @@ void main() {
       });
 
       test('空列表正确序列化', () {
-        final data = ExportData(
+        const data = ExportData(
           version: '1.0',
           exportTime: '2024-06-15T10:30:00Z',
           appVersion: '1.0.0',
@@ -147,13 +147,14 @@ void main() {
         expect(restored.cards.length, testExportData.cards.length);
         expect(restored.sources.length, testExportData.sources.length);
         expect(restored.reviewLogs.length, testExportData.reviewLogs.length);
-        expect(restored.gameSessions.length, testExportData.gameSessions.length);
+        expect(
+            restored.gameSessions.length, testExportData.gameSessions.length);
         expect(restored.userProfile, isNotNull);
         expect(restored.userProfile!['id'], testExportData.userProfile!['id']);
       });
 
       test('无userProfile时往返一致', () {
-        final data = ExportData(
+        const data = ExportData(
           version: '1.0',
           exportTime: '2024-06-15T10:30:00Z',
           appVersion: '1.0.0',
