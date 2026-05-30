@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace "com.enstudy.app"
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId "com.enstudy.app"
-        minSdk 21
-        targetSdk 34
+        minSdkVersion flutter.minSdkVersion
+        targetSdk 36
         versionCode 1
         versionName "1.0.0"
     }
@@ -28,6 +28,7 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+        coreLibraryDesugaringEnabled true
     }
 
     kotlinOptions {
@@ -39,4 +40,6 @@ flutter {
     source '../..'
 }
 
-dependencies {}
+dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+}

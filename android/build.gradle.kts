@@ -17,6 +17,15 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+
+    // Force compileSdk 36 before evaluation
+    beforeEvaluate {
+        if (project.name != "app") {
+            extensions.findByType<com.android.build.gradle.LibraryExtension>()?.apply {
+                compileSdk = 36
+            }
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {

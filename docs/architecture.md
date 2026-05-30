@@ -47,6 +47,7 @@ enstudy/
 │   │   │   ├── colors.dart
 │   │   │   └── typography.dart
 │   │   ├── network/                 # 网络层
+│   │   │   ├── api_client.dart            # 后端API客户端（JWT Token注入）
 │   │   │   └── cors_proxy_interceptor.dart  # CORS代理拦截器（Web跨域）
 │   │   ├── database/                # 数据库层
 │   │   │   ├── database_setup.dart        # 条件导入入口
@@ -82,13 +83,12 @@ enstudy/
 │   │   │   │   ├── models/
 │   │   │   │   │   └── upload_result.dart
 │   │   │   │   ├── datasources/
-│   │   │   │   │   ├── ocr_service.dart         # 百度OCR封装
-│   │   │   │   └── ai_analysis_service.dart  # DeepSeek AI封装
+│   │   │   │   │   └── qwen_vision_service.dart  # 千问多模态API封装（图片识别+内容分析一体化）
 │   │   │   │   └── repositories/
 │   │   │   │       └── upload_repository_impl.dart
 │   │   │   ├── domain/
 │   │   │   │   ├── entities/
-│   │   │   │   │   └── ocr_result.dart
+│   │   │   │   │   └── analysis_result.dart
 │   │   │   │   └── repositories/
 │   │   │   │       └── upload_repository.dart
 │   │   │   └── presentation/
@@ -228,7 +228,7 @@ enstudy/
 ├──────────────────────────────────────────────────┤
 │                  Data Layer                       │
 │  (Models, DAOs, Repository Implementations,       │
-│   External Services: OCR, AI API)                 │
+│   External Services: Multimodal AI API)            │
 └──────────────────────────────────────────────────┘
 ```
 
@@ -265,14 +265,6 @@ enstudy/
      │
      ▼
 ┌────────────────────────────────┐
-│  OCR 识别 (百度OCR API)        │
-│  - 通用文字识别                 │
-│  - 返回文字内容+位置坐标        │
-│  - 支持中英文混合识别           │
-└────────────────────────────────┘
-     │
-     ▼
-┌────────────────────────────────┐
 │  选择解析方式                    │
 │  ┌────────────┐ ┌────────────┐ │
 │  │ 智能识别    │ │ 自定义要求  │ │
@@ -283,7 +275,8 @@ enstudy/
          ▼              ▼
 ┌──────────────┐ ┌──────────────────────────┐
 │ 默认Prompt   │ │ 自定义Prompt              │
-│ - 标记内容匹配│ │ - 用户输入文字要求         │
+│ + 图片Base64 │ │ + 图片Base64              │
+│ - 识别标记内容│ │ - 用户输入文字要求         │
 │ - 翻译+音标   │ │ - AI按自定义要求分析       │
 │ - 生成例句    │ │ - 灵活定制输出格式         │
 │ - 推荐补充    │ │                          │
@@ -292,10 +285,12 @@ enstudy/
        └──────────┬───────────┘
                   ▼
 ┌────────────────────────────────┐
-│  AI 内容分析 (DeepSeek API)     │
-│  - 根据 Prompt 模式分析         │
-│  - 智能识别：翻译标记内容+推荐   │
-│  - 自定义要求：按用户需求分析    │
+│  千问多模态API (qwen3.5-omni-  │
+│  flash)                        │
+│  - 单次调用完成图片识别+内容分析 │
+│  - 直接理解图片中的文字和标记    │
+│  - 一步完成图片识别与内容分析     │
+│  - 兼容OpenAI API格式           │
 └────────────────────────────────┘
      │
      ▼
@@ -309,8 +304,8 @@ enstudy/
 
 | 模式 | 触发方式 | Prompt来源 | 适用场景 |
 |------|---------|-----------|---------|
-| 智能识别 | 默认选择 | 内置默认Prompt | 标记了生词/短语的学习材料 |
-| 自定义要求 | 用户主动选择 | 用户输入文字要求 | 有特定分析需求，如"只提取动词"、"按主题分类"等 |
+| 智能识别 | 默认选择 | 内置默认Prompt + 图片 | 标记了生词/短语的学习材料 |
+| 自定义要求 | 用户主动选择 | 用户输入文字要求 + 图片 | 有特定分析需求，如"只提取动词"、"按主题分类"等 |
 
 #### 2.3.2 复习调度流程
 
@@ -785,56 +780,49 @@ class Sm2Algorithm {
 }
 ```
 
-### 4.2 OCR + 标记识别方案
+### 4.2 千问多模态图片识别方案
 
 ```
-方案：百度OCR通用文字识别 + 自研标记检测
+方案：千问多模态模型（qwen3.5-omni-flash）直接分析图片
+
+核心优势：
+- 单次API调用一步完成图片识别+内容分析
+- 直接理解图片中的文字、标记（高亮/下划线/划线）和排版
+- 兼容OpenAI API格式，调用简单
+- 价格极低：约¥0.002/1K tokens
 
 步骤：
-1. 调用百度OCR通用文字识别API
-   - 接口：https://aip.baidubce.com/rest/2.0/ocr/v1/general
-   - 返回每个文字块的边界框 (location) 和文字内容 (words)
-   - 支持中英文混合识别，返回位置坐标
+1. 将图片转为Base64编码
+2. 构建多模态请求（图片+文本Prompt）
+3. 调用千问多模态API（DashScope服务）
+4. 解析返回的JSON结果，生成卡片数据
 
-2. 颜色分析检测标记区域（本地处理）
-   - 遍历图片像素，检测高亮色（黄色、粉色等常见标记色）
-   - 生成标记区域的掩码 (mask)
-   - 提取标记区域的边界矩形
-
-3. 文字与标记区域匹配
-   - 计算百度OCR返回的文字块边界框与标记区域的重叠度 (IoU)
-   - 重叠度超过阈值的文字块视为"已标记"
-   - 根据标记颜色分类：黄色→生词，绿色→短语，粉色→语法
-
-4. 输出结构化结果
-   - markedItems: 用户标记的内容列表
-   - unmarkedText: 未标记的文字（供AI分析）
-
-百度OCR接入说明：
-- 需要在百度智能云创建应用，获取 API Key 和 Secret Key
-- 通过 API Key 获取 Access Token（有效期30天，需定时刷新）
-- 免费额度：通用文字识别每月1000次
-- 识别速度：单张图片约1-3秒
+API接入说明：
+- 服务地址：https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
+- 模型：qwen3.5-omni-flash
+- 兼容OpenAI API格式，可直接使用dio调用
+- 支持图片Base64输入（data:image/jpeg;base64,...）
+- 识别速度：单张图片约2-5秒
+- 免费额度：DashScope新用户赠送tokens
 ```
 
 ### 4.3 AI 内容分析接口设计
 
 ```dart
-abstract class AiAnalysisService {
-  Future<AiAnalysisResult> analyze({
-    required String ocrText,
-    required List<String> markedContents,
-    required List<MarkType> markTypes,
+abstract class QwenVisionService {
+  Future<AnalysisResult> analyze({
+    required String imageBase64,
     String? customPrompt,
   });
 }
 
-// DeepSeek API 实现
-// - API地址：https://api.deepseek.com/v1/chat/completions
-// - 模型：deepseek-chat
+// 千问多模态API实现
+// - API地址：https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
+// - 模型：qwen3.5-omni-flash
 // - 兼容 OpenAI API 格式，可直接使用 dio 调用
-// - 价格：输入 ¥1/百万token，输出 ¥2/百万token（远低于GPT-4）
-// - 支持中文理解和翻译，效果优秀
+// - 图片通过Base64编码传入messages的image_url字段
+// - 价格：约¥0.002/1K tokens（远低于GPT-4V）
+// - 单次调用一步完成图片识别+内容分析
 //
 // customPrompt 参数说明：
 // - 传入时：使用用户自定义Prompt进行分析（自定义要求模式）
@@ -842,17 +830,11 @@ abstract class AiAnalysisService {
 
 // 默认 Prompt 模板（智能识别模式）
 const analysisPrompt = '''
-你是一个英语学习助手。请分析以下来自学生学习材料的文本。
+你是一个英语学习助手。请分析这张来自学生学习材料的图片。
 
-OCR识别文本：
-$ocrText
-
-学生标记的内容（这些是他们不认识的）：
-$markedContents
-
-请提供：
-1. 对每个标记项：中文翻译、音标（单词类型）、例句
-2. 从文本中推荐最多3个学生可能不认识的重要单词/短语
+请识别图片中的所有英文文字内容，特别注意：
+1. 用户通过划线、高亮、下划线等方式标注的内容（这些是他们不认识的）
+2. 图片中的重要单词、短语和语法点
 
 请以JSON格式返回：
 {
@@ -879,32 +861,39 @@ $markedContents
 }
 ''';
 
-// DeepSeek API 调用示例
-class DeepSeekAiService implements AiAnalysisService {
-  static const String _baseUrl = 'https://api.deepseek.com/v1/chat/completions';
+// 千问多模态API调用示例
+class QwenVisionServiceImpl implements QwenVisionService {
+  static const String _baseUrl = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
 
   @override
-  Future<AiAnalysisResult> analyze({
-    required String ocrText,
-    required List<String> markedContents,
-    required List<MarkType> markTypes,
+  Future<AnalysisResult> analyze({
+    required String imageBase64,
     String? customPrompt,
   }) async {
     // customPrompt 不为空时使用自定义Prompt，否则使用默认Prompt
     // 使用 dio 发送 POST 请求
     // Header: Authorization: Bearer $apiKey
-    // Body: { model: "deepseek-chat", messages: [...] }
+    // Body: {
+    //   model: "qwen3.5-omni-flash",
+    //   messages: [{
+    //     role: "user",
+    //     content: [
+    //       { type: "image_url", image_url: { url: "data:image/jpeg;base64,$imageBase64" } },
+    //       { type: "text", text: prompt }
+    //     ]
+    //   }]
+    // }
     // 解析返回的 JSON 结果
   }
 }
 ```
 
-**备选AI方案（如DeepSeek不可用）：**
+**备选AI方案（如千问不可用）：**
 
 | 方案 | API地址 | 模型 | 特点 |
 |------|---------|------|------|
-| 通义千问 | https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation | qwen-turbo | 阿里云服务，稳定可靠 |
-| 智谱AI | https://open.bigmodel.cn/api/paas/v4/chat/completions | glm-4-flash | 免费额度多 |
+| 通义千问文本 | https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions | qwen-turbo | 纯文本分析，需配合图片识别 |
+| 智谱AI | https://open.bigmodel.cn/api/paas/v4/chat/completions | glm-4v-flash | 多模态，免费额度多 |
 | 月之暗面 | https://api.moonshot.cn/v1/chat/completions | moonshot-v1-8k | 长文本处理强 |
 
 所有备选方案均兼容 OpenAI API 格式，切换成本极低，只需修改 baseUrl 和模型名。
@@ -1102,9 +1091,10 @@ enum ConflictStrategy { keepNewer, overwrite, skip }
 | drift | ^2.18.0 | SQLite ORM |
 | sqlite3_flutter_libs | ^0.5.0 | SQLite原生库（Android/iOS/Windows） |
 | drift/wasm | (drift内置) | Web平台SQLite WASM支持（sqlite3.wasm + drift_worker.js） |
-| dio | ^5.4.0 | HTTP客户端（百度OCR + DeepSeek AI） |
+| dio | ^5.4.0 | HTTP客户端（千问多模态API + 后端API） |
+| http | ^1.2.0 | HTTP客户端（后端API调用） |
 | image_picker | ^1.0.0 | 图片选择/拍照 |
-| image | ^4.0.0 | 图片处理（压缩+标记检测） |
+| image | ^4.0.0 | 图片处理（压缩） |
 | image_cropper | ^8.0.0 | 图片裁剪 |
 | flutter_tts | ^4.0.0 | 语音合成（单词发音、听力游戏） |
 | audioplayers | ^6.0.0 | 音频播放（游戏音效） |
@@ -1121,7 +1111,7 @@ enum ConflictStrategy { keepNewer, overwrite, skip }
 | flutter_animate | ^4.5.0 | 动画效果 |
 | confetti | ^0.7.0 | 庆祝动画（游戏结算） |
 | mocktail | ^1.0.0 | 单元测试Mock框架 |
-| fluwx | ^4.0.0 | 微信SDK（登录、分享） |
+| fluwx | ^4.0.0 | 微信SDK（分享，已移除登录功能） |
 | flutter_dotenv | ^5.1.0 | 环境变量配置（.env文件加载） |
 | flutter_test | SDK | Widget测试和集成测试 |
 
@@ -1144,17 +1134,16 @@ enum ConflictStrategy { keepNewer, overwrite, skip }
 │     └─ 无值 → 回退到 ApiConfig 默认值              │
 │                                                    │
 │  ApiConfig (api_config.dart)                       │
-│  ├── 百度OCR API Key 默认值                        │
-│  ├── 百度OCR Secret Key 默认值                     │
-│  ├── DeepSeek API Key 默认值                       │
+│  ├── 千问API Key 默认值（从.env读取）              │
+│  ├── 后端API地址（从.env读取）                     │
 │  └── adminWechatIds 管理员微信号列表                │
 │                                                    │
 │  flutter_secure_storage (用户覆盖)                  │
-│  ├── key: baidu_ocr_api_key                        │
-│  ├── key: baidu_ocr_secret_key                     │
-│  └── key: deepseek_api_key                         │
+│  └── key: qwen_api_key                            │
 │                                                    │
 │  .env 环境变量配置                                  │
+│  ├── QWEN_API_KEY=sk-xxx                          │
+│  ├── API_BASE_URL=http://127.0.0.1:8000           │
 │  └── ADMIN_WECHAT_IDS=smarkfire,admin2             │
 └──────────────────────────────────────────────────┘
 ```
@@ -1162,16 +1151,14 @@ enum ConflictStrategy { keepNewer, overwrite, skip }
 ```dart
 // api_config.dart - API密钥默认配置
 class ApiConfig {
-  static const String baiduOcrApiKey = 'default_baidu_api_key';
-  static const String baiduOcrSecretKey = 'default_baidu_secret_key';
-  static const String deepseekApiKey = 'default_deepseek_api_key';
+  static String get qwenApiKey =>
+      dotenv.env['QWEN_API_KEY'] ?? '';
 
-  // 管理员微信号列表（从.env文件读取 ADMIN_WECHAT_IDS）
-  static List<String> get adminWechatIds {
-    const ids = String.fromEnvironment('ADMIN_WECHAT_IDS', defaultValue: '');
-    if (ids.isEmpty) return [];
-    return ids.split(',').map((id) => id.trim()).toList();
-  }
+  static String get apiBaseUrl =>
+      dotenv.env['API_BASE_URL'] ?? 'http://127.0.0.1:8000';
+
+  static String get adminWechatIds =>
+      dotenv.env['ADMIN_WECHAT_IDS'] ?? '';
 }
 
 // 密钥获取逻辑
@@ -1184,7 +1171,7 @@ Future<String> getApiKey(String key, String defaultValue) async {
 **其他安全措施：**
 - 本地数据库可选加密（SQLCipher）
 - 图片存储在应用沙盒目录，其他应用不可访问
-- 网络请求仅在与百度OCR/DeepSeek服务通信时使用，核心功能离线可用
+- 网络请求仅在与千问多模态API和后端服务通信时使用，核心功能离线可用
 - Web平台安全存储使用 Window.localStorage，敏感数据需注意XSS防护
 - JWT Token安全存储，使用flutter_secure_storage加密保存，不明文存储到本地文件
 - AI次数扣减使用乐观锁，防止并发超扣（UPDATE WHERE ai_quota > 0，检查affected rows）
@@ -1193,7 +1180,7 @@ Future<String> getApiKey(String key, String defaultValue) async {
 
 ### 6.2 性能优化
 - 图片上传前压缩至 500KB 以内
-- OCR 在独立 Isolate 中执行，不阻塞UI
+- 多模态图片识别在独立 Isolate 中执行，不阻塞UI
 - 卡片列表使用 ListView.builder 懒加载
 - 数据库查询添加索引（next_review, status, created_at）
 - AI 请求结果本地缓存，避免重复调用
@@ -1332,7 +1319,7 @@ DatabaseConnection createDatabaseConnection() {
 
 #### 7.5.2 CORS 跨域处理
 
-Web 平台直接调用百度OCR/DeepSeek API会遇到CORS限制，通过 `CorsProxyInterceptor` 解决：
+Web 平台直接调用千问多模态API会遇到CORS限制，通过 `CorsProxyInterceptor` 解决：
 
 ```dart
 // cors_proxy_interceptor.dart
@@ -1372,12 +1359,12 @@ Web 平台无法使用本地文件路径，采用 blob URL 方案：
 
 | 功能 | 状态 | 说明 |
 |------|------|------|
-| 标记检测 | ❌ 不支持 | Web端无法进行像素级颜色分析，仅支持OCR文字识别 |
+| 标记检测 | ✅ 支持 | 千问多模态模型可直接识别图片中的标记（高亮/下划线/划线） |
 | 本地通知 | ❌ 不支持 | awesome_notifications 不支持Web，需降级为页面内提醒 |
 | 图片裁剪 | ❌ 不支持 | image_cropper 不支持Web，可考虑Web端替代方案 |
 | 数据库 | ✅ 支持 | 使用WasmDatabase，需部署wasm文件 |
 | AI分析 | ✅ 支持 | 需CORS代理 |
-| OCR识别 | ✅ 支持 | 需CORS代理 |
+| 图片识别 | ✅ 支持 | 千问多模态模型，需CORS代理 |
 | 游戏模块 | ✅ 支持 | 纯Dart实现，无平台限制 |
 | 数据导入导出 | ⚠️ 部分支持 | 使用浏览器下载/文件选择替代原生文件操作 |
 

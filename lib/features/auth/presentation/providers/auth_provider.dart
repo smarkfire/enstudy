@@ -1,13 +1,10 @@
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:uuid/uuid.dart';
 
-import 'package:enstudy/core/constants/api_config.dart';
-import 'package:enstudy/core/database/app_database.dart';
-import 'package:enstudy/core/database/daos/user_dao.dart';
-import 'package:enstudy/features/upload/presentation/providers/upload_provider.dart';
-import 'package:enstudy/features/auth/data/models/user_model.dart';
+import 'package:enstudy/core/network/api_client.dart';
+import 'package:enstudy/features/auth/data/services/auth_service.dart';
+import 'package:enstudy/features/profile/data/services/user_service.dart';
 import 'package:enstudy/features/auth/domain/entities/user.dart';
 
 class AuthState {
@@ -37,111 +34,78 @@ class AuthState {
       );
 }
 
-final userDaoProvider = Provider<UserDao>((ref) {
-  return UserDao(ref.watch(appDatabaseProvider));
+final authServiceProvider = Provider<AuthService>((ref) {
+  return AuthService();
+});
+
+final userServiceProvider = Provider<UserService>((ref) {
+  return UserService();
 });
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(ref.watch(userDaoProvider));
+  return AuthNotifier(
+    ref.watch(authServiceProvider),
+    ref.watch(userServiceProvider),
+  );
 });
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  final UserDao _userDao;
+  final AuthService _authService;
+  final UserService _userService;
   final _secureStorage = const FlutterSecureStorage();
-  final _uuid = const Uuid();
+  final _apiClient = ApiClient();
 
-  AuthNotifier(this._userDao) : super(const AuthState()) {
+  AuthNotifier(this._authService, this._userService) : super(const AuthState()) {
     _restoreLogin();
   }
 
   Future<void> _restoreLogin() async {
-    final userId = await _secureStorage.read(key: 'current_user_id');
-    if (userId == null) return;
+    final token = await _secureStorage.read(key: 'auth_token');
+    if (token == null) return;
 
+    _apiClient.setToken(token);
     state = state.copyWith(isLoading: true);
     try {
-      final userRow = await _userDao.getUserById(userId);
-      if (userRow != null) {
-        final user = userRow.toEntity();
-        final adminIds = _getAdminIds();
-        final isAdmin = adminIds.contains(user.wechatId);
-        state = state.copyWith(
-          user: user.copyWith(isAdmin: isAdmin),
-          isLoading: false,
-        );
-      } else {
-        await _secureStorage.delete(key: 'current_user_id');
-        state = state.copyWith(isLoading: false);
-      }
+      final profileData = await _userService.getProfile();
+      final user = User.fromApiJson(profileData);
+      state = state.copyWith(user: user, isLoading: false);
     } catch (e) {
       debugPrint('Restore login error: $e');
+      await _clearLogin();
       state = state.copyWith(isLoading: false);
     }
   }
 
-  Future<void> loginWithWechat() async {
+  Future<void> sendVerificationCode(String phone) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final wechatId = 'demo_user_${DateTime.now().millisecondsSinceEpoch}';
-      final nickname = '微信用户';
-      final avatarUrl = '';
-
-      await _loginOrRegister(wechatId, nickname, avatarUrl);
+      await _authService.sendVerificationCode(phone);
+      state = state.copyWith(isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: '登录失败：$e',
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
-  Future<void> loginWithWechatId(String wechatId, {String nickname = '', String avatarUrl = ''}) async {
+  Future<void> login(String phone, String code) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await _loginOrRegister(wechatId, nickname.isNotEmpty ? nickname : '用户$wechatId', avatarUrl);
+      final result = await _authService.login(phone, code);
+      _apiClient.setToken(result.token);
+      await _secureStorage.write(key: 'auth_token', value: result.token);
+      state = state.copyWith(user: result.user, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: '登录失败：$e',
-      );
-    }
-  }
-
-  Future<void> _loginOrRegister(String wechatId, String nickname, String avatarUrl) async {
-    final adminIds = _getAdminIds();
-    final isAdmin = adminIds.contains(wechatId);
-
-    var userRow = await _userDao.getUserByWechatId(wechatId);
-
-    if (userRow != null) {
-      await _userDao.updateLastLogin(userRow.id);
-      userRow = await _userDao.getUserById(userRow.id);
-      if (userRow != null) {
-        final user = userRow.toEntity().copyWith(isAdmin: isAdmin);
-        await _secureStorage.write(key: 'current_user_id', value: user.id);
-        state = state.copyWith(user: user, isLoading: false);
-      }
-    } else {
-      final id = _uuid.v4();
-      final now = DateTime.now();
-      final newUser = User(
-        id: id,
-        wechatId: wechatId,
-        nickname: nickname,
-        avatarUrl: avatarUrl,
-        aiQuota: 10,
-        isAdmin: isAdmin,
-        createdAt: now,
-      );
-      await _userDao.insertUser(newUser.toCompanion());
-      await _secureStorage.write(key: 'current_user_id', value: id);
-      state = state.copyWith(user: newUser, isLoading: false);
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
   Future<void> logout() async {
-    await _secureStorage.delete(key: 'current_user_id');
+    await _clearLogin();
     state = const AuthState();
+  }
+
+  Future<void> _clearLogin() async {
+    await _secureStorage.delete(key: 'auth_token');
+    _apiClient.clearToken();
   }
 
   Future<bool> consumeAiQuota() async {
@@ -149,29 +113,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (user == null) return false;
     if (user.aiQuota <= 0) return false;
 
-    final success = await _userDao.decrementAiQuotaIfAvailable(user.id);
-    if (success) {
-      state = state.copyWith(
-        user: user.copyWith(aiQuota: user.aiQuota - 1),
-      );
+    try {
+      final result = await _userService.consumeQuota('smart_analysis');
+      final newQuota = result['remaining_quota'] as int;
+      state = state.copyWith(user: user.copyWith(aiQuota: newQuota));
+      return true;
+    } catch (e) {
+      debugPrint('Consume quota error: $e');
+      return false;
     }
-    return success;
   }
 
   Future<void> refreshUser() async {
     final user = state.user;
     if (user == null) return;
-    final userRow = await _userDao.getUserById(user.id);
-    if (userRow != null) {
-      final adminIds = _getAdminIds();
-      final isAdmin = adminIds.contains(userRow.wechatId);
-      state = state.copyWith(user: userRow.toEntity().copyWith(isAdmin: isAdmin));
+    try {
+      final profileData = await _userService.getProfile();
+      state = state.copyWith(user: User.fromApiJson(profileData));
+    } catch (e) {
+      debugPrint('Refresh user error: $e');
     }
-  }
-
-  List<String> _getAdminIds() {
-    final ids = ApiConfig.adminWechatIds;
-    if (ids.isEmpty) return [];
-    return ids.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
   }
 }

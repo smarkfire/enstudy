@@ -37,6 +37,9 @@ class ProfilePage extends ConsumerWidget {
             ref.invalidate(profileProvider);
             ref.invalidate(profileStatsProvider);
             ref.invalidate(weeklyStatsProvider);
+            if (authState.isLoggedIn) {
+              ref.read(authProvider.notifier).refreshUser();
+            }
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -357,7 +360,7 @@ class ProfilePage extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 2),
-                  Text('微信号: ${user.wechatId}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary)),
+                  Text(user.phone != null ? '手机号: ${user.phone}' : '', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary)),
                 ],
               ),
             ),
@@ -441,43 +444,100 @@ class ProfilePage extends ConsumerWidget {
   }
 
   void _showLoginDialog(BuildContext context, WidgetRef ref) {
-    final controller = TextEditingController();
+    final phoneController = TextEditingController();
+    final codeController = TextEditingController();
+    bool codeSent = false;
+    bool isSendingCode = false;
+
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('微信登录'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('请输入微信号进行登录（模拟微信登录）', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-            const SizedBox(height: 12),
-            TextField(
-              controller: controller,
-              decoration: const InputDecoration(
-                labelText: '微信号',
-                hintText: '请输入微信号',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person_outline, size: 20),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (stateContext, setState) => AlertDialog(
+          title: const Text('手机号登录'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: '手机号',
+                  hintText: '请输入手机号',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.phone_outlined, size: 20),
+                ),
               ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: codeController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: '验证码',
+                  hintText: '请输入验证码',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.verified_outlined, size: 20),
+                  suffixIcon: TextButton(
+                    onPressed: isSendingCode ? null : () async {
+                      final phone = phoneController.text.trim();
+                      if (phone.isEmpty) {
+                        if (stateContext.mounted) {
+                          ScaffoldMessenger.of(stateContext).showSnackBar(
+                            const SnackBar(content: Text('请先输入手机号')),
+                          );
+                        }
+                        return;
+                      }
+
+                      setState(() => isSendingCode = true);
+                      try {
+                        await ref.read(authProvider.notifier).sendVerificationCode(phone);
+                        setState(() => codeSent = true);
+                        if (stateContext.mounted) {
+                          ScaffoldMessenger.of(stateContext).showSnackBar(
+                            const SnackBar(content: Text('验证码已发送（开发模式）')),
+                          );
+                        }
+                      } catch (e) {
+                        if (stateContext.mounted) {
+                          ScaffoldMessenger.of(stateContext).showSnackBar(
+                            SnackBar(content: Text('发送失败：$e')),
+                          );
+                        }
+                      } finally {
+                        setState(() => isSendingCode = false);
+                      }
+                    },
+                    child: Text(isSendingCode ? '发送中...' : '发送验证码'),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('取消'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final phone = phoneController.text.trim();
+                final code = codeController.text.trim();
+                if (phone.isEmpty || code.isEmpty) {
+                  if (stateContext.mounted) {
+                    ScaffoldMessenger.of(stateContext).showSnackBar(
+                      const SnackBar(content: Text('请输入手机号和验证码')),
+                    );
+                  }
+                  return;
+                }
+
+                Navigator.of(dialogContext).pop();
+                await ref.read(authProvider.notifier).login(phone, code);
+              },
+              child: const Text('登录'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('取消'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final wechatId = controller.text.trim();
-              if (wechatId.isNotEmpty) {
-                Navigator.of(dialogContext).pop();
-                ref.read(authProvider.notifier).loginWithWechatId(wechatId);
-              }
-            },
-            child: const Text('登录'),
-          ),
-        ],
       ),
     );
   }

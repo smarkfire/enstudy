@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+psycopg[binary]
+alembic
+pydantic
+pydantic-settings
+python-jose[cryptography]
+redis
+alibabacloud-dysmsapi20170525
+alibabacloud-tea-openapi
+python-dotenv
+httpx

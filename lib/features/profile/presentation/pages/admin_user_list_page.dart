@@ -1,21 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:enstudy/core/database/app_database.dart';
 import 'package:enstudy/core/theme/colors.dart';
-import 'package:enstudy/features/auth/data/models/user_model.dart';
 import 'package:enstudy/features/auth/presentation/providers/auth_provider.dart';
+import 'package:enstudy/features/profile/data/services/admin_service.dart';
 
-final _allUsersStreamProvider = StreamProvider<List<UserRow>>((ref) {
-  final userDao = ref.watch(userDaoProvider);
-  return userDao.watchAllUsers();
-});
+class _User {
+  final String id;
+  final String phone;
+  final String nickname;
+  final String avatarUrl;
+  final int aiQuota;
+  final bool isAdmin;
+  final DateTime? createdAt;
 
-class AdminUserListPage extends ConsumerWidget {
+  _User({
+    required this.id,
+    required this.phone,
+    required this.nickname,
+    required this.avatarUrl,
+    required this.aiQuota,
+    required this.isAdmin,
+    this.createdAt,
+  });
+}
+
+class AdminUserListPage extends ConsumerStatefulWidget {
   const AdminUserListPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminUserListPage> createState() => _AdminUserListPageState();
+}
+
+class _AdminUserListPageState extends ConsumerState<AdminUserListPage> {
+  List<_User> _users = [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsers();
+  }
+
+  Future<void> _loadUsers() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final response = await AdminService().listUsers();
+      setState(() {
+        _users = (response['users'] as List).map((u) => _User(
+          id: u['id'],
+          phone: u['phone'],
+          nickname: u['nickname'],
+          avatarUrl: u['avatar_url'],
+          aiQuota: u['ai_quota'],
+          isAdmin: u['is_admin'],
+        )).toList();
+      });
+    } catch (e) {
+      setState(() => _error = e.toString());
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
     if (!authState.isAdmin) {
@@ -36,48 +90,48 @@ class AdminUserListPage extends ConsumerWidget {
       );
     }
 
-    final usersAsync = ref.watch(_allUsersStreamProvider);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('用户管理'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadUsers,
+          ),
+        ],
       ),
-      body: usersAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('加载失败：$e')),
-        data: (users) {
-          if (users.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.people_outline, size: 64, color: AppColors.textHint),
-                  SizedBox(height: 16),
-                  Text('暂无用户',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 16)),
-                ],
-              ),
-            );
-          }
-
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: users.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              final user = users[index];
-              return _UserCard(
-                user: user,
-                onTap: () => _showQuotaDialog(context, ref, user),
-              );
-            },
-          );
-        },
-      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? Center(child: Text('加载失败：$_error'))
+              : _users.isEmpty
+                  ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.people_outline, size: 64, color: AppColors.textHint),
+                          SizedBox(height: 16),
+                          Text('暂无用户',
+                              style: TextStyle(color: AppColors.textSecondary, fontSize: 16)),
+                        ],
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _users.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final user = _users[index];
+                        return _UserCard(
+                          user: user,
+                          onTap: () => _showQuotaDialog(context, user),
+                        );
+                      },
+                    ),
     );
   }
 
-  void _showQuotaDialog(BuildContext context, WidgetRef ref, UserRow user) {
+  void _showQuotaDialog(BuildContext context, _User user) {
     final quotaController = TextEditingController(text: '${user.aiQuota}');
     var currentQuota = user.aiQuota;
 
@@ -110,7 +164,7 @@ class AdminUserListPage extends ConsumerWidget {
                           style: const TextStyle(fontSize: 16),
                         ),
                         Text(
-                          user.wechatId,
+                          user.phone,
                           style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.textSecondary,
@@ -226,13 +280,26 @@ class AdminUserListPage extends ConsumerWidget {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    final userDao = ref.read(userDaoProvider);
-                    await userDao.updateAiQuota(user.id, currentQuota);
-                    if (dialogContext.mounted) {
+                    final change = currentQuota - user.aiQuota;
+                    if (change == 0) {
                       Navigator.of(dialogContext).pop();
+                      return;
                     }
-                    ref.invalidate(_allUsersStreamProvider);
-                    ref.read(authProvider.notifier).refreshUser();
+
+                    try {
+                      await AdminService().updateQuota(user.id, change);
+                      if (dialogContext.mounted) {
+                        Navigator.of(dialogContext).pop();
+                      }
+                      await _loadUsers();
+                      ref.read(authProvider.notifier).refreshUser();
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('保存失败：$e')),
+                        );
+                      }
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -250,7 +317,7 @@ class AdminUserListPage extends ConsumerWidget {
 }
 
 class _UserCard extends StatelessWidget {
-  final UserRow user;
+  final _User user;
   final VoidCallback onTap;
 
   const _UserCard({required this.user, required this.onTap});
@@ -310,7 +377,7 @@ class _UserCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '微信号：${user.wechatId}',
+                      '手机号：${user.phone}',
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.textSecondary,
